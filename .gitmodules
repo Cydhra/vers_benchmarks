@@ -1,0 +1,3 @@
+[submodule "vers"]
+	path = vers
+	url = https://github.com/Cydhra/vers

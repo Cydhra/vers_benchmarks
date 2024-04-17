@@ -1,0 +1,44 @@
+[package]
+name = "vers_benchmarks"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+rand = { version = "0.8", features = ["alloc"] }
+plotters = "0.3.5"
+
+# vers
+vers-vecs = { path = "vers" }
+
+# comparison benchmarks libraries
+rsdict = { version = "0.0.8", features = ["simd"] }
+bio = "1.6"
+bv = "0.11"
+fid = "0.1"
+indexed_bitvec = "4.0"
+succinct = "0.5"
+elias-fano = "1.1"
+range_minimum_query = "0.1"
+librualg = "0.29"
+sucds = "0.8"
+
+[[bench]]
+name = "rank_and_select"
+harness = false
+
+[[bench]]
+name = "rmq"
+harness = false
+
+[[bench]]
+name = "elias_fano"
+harness = false
+
+[[bench]]
+name = "select_adversarial"
+harness = false
+
+[[bench]]
+name = "elias_fano_adversarial"
+harness = false
