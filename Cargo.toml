@@ -9,7 +9,7 @@ rand = { version = "0.8", features = ["alloc"] }
 plotters = "0.3.5"
 
 # vers
-vers-vecs = { path = "vers" }
+vers-vecs = { path = "vers", features = ["simd"] }
 
 # comparison benchmarks libraries
 rsdict = { version = "0.0.8", features = ["simd"] }
@@ -42,3 +42,6 @@ harness = false
 [[bench]]
 name = "elias_fano_adversarial"
 harness = false
+
+[profile.bench]
+lto = true
