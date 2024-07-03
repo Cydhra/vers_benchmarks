@@ -13,7 +13,7 @@ vers-vecs = { path = "vers", features = ["simd"] }
 
 # comparison benchmarks libraries
 rsdict = { version = "0.0.8", features = ["simd"] }
-bio = "1.6"
+bio = "2.0"
 bv = "0.11"
 fid = "0.1"
 indexed_bitvec = "4.0"
