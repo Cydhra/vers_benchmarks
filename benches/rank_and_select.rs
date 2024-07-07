@@ -1,4 +1,5 @@
 use bio::data_structures::rank_select::RankSelect as BioRsVec;
+use bitm::{BitAccess, BitVec, Rank as BitmRank, RankSelect101111, Select0};
 use bv::BitVec as BioVec;
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
 use fid::{BitVector as FidVec, FID};
@@ -94,6 +95,17 @@ fn construct_sucds_darray(rng: &mut ThreadRng, len: usize) -> SucDArray {
     SucDArray::from_bits(suc_bv.iter()).enable_rank()
 }
 
+fn construct_bitm_vec(rng: &mut ThreadRng, len: usize) -> RankSelect101111 {
+    let mut bv = Box::<[u64]>::with_filled_bits(len);
+    for i in 0..len {
+        if rng.gen_bool(0.5) {
+            bv.set_bit(i);
+        }
+    }
+
+    bv.into()
+}
+
 fn compare_ranks(b: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
@@ -110,6 +122,7 @@ fn compare_ranks(b: &mut Criterion) {
         let rank9_vec = construct_rank9_vec(&mut rng, l);
         let sucds_vec = construct_sucds_vec(&mut rng, l);
         let sucds_darray = construct_sucds_darray(&mut rng, l);
+        let bitm_vec = construct_bitm_vec(&mut rng, l);
 
         let sample = Uniform::new(0, l);
 
@@ -184,6 +197,14 @@ fn compare_ranks(b: &mut Criterion) {
                 BatchSize::SmallInput,
             )
         });
+
+        group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(bitm_vec.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
     }
     group.finish();
 }
@@ -204,6 +225,7 @@ fn compare_selects(b: &mut Criterion) {
         let rank9_vec = construct_rank9_select_vec(&mut rng, l);
         let sucds_vec = construct_sucds_vec(&mut rng, l);
         let sucds_darray = construct_sucds_darray(&mut rng, l);
+        let bitm_vec = construct_bitm_vec(&mut rng, l);
 
         let sample = Uniform::new(0, l / 3);
 
@@ -275,6 +297,14 @@ fn compare_selects(b: &mut Criterion) {
             b.iter_batched(
                 || sample.sample(&mut rng),
                 |e| black_box(sucds_darray.select1(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(bitm_vec.select0(e)),
                 BatchSize::SmallInput,
             )
         });

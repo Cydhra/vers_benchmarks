@@ -22,6 +22,8 @@ elias-fano = "1.1"
 range_minimum_query = "0.1"
 librualg = "0.29"
 sucds = "0.8"
+bitm = "0.4"
+cseq = "0.1"
 
 [[bench]]
 name = "rank_and_select"
