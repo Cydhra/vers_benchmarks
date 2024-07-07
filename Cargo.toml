@@ -42,7 +42,7 @@ name = "select_adversarial"
 harness = false
 
 [[bench]]
-name = "elias_fano_adversarial"
+name = "elias_fano_predecessor"
 harness = false
 
 [profile.bench]
