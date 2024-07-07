@@ -96,7 +96,7 @@ fn construct_sucds_darray(rng: &mut ThreadRng, len: usize) -> SucDArray {
 }
 
 fn construct_bitm_vec(rng: &mut ThreadRng, len: usize) -> RankSelect101111 {
-    let mut bv = Box::<[u64]>::with_filled_bits(len);
+    let mut bv = Box::<[u64]>::with_zeroed_bits(len);
     for i in 0..len {
         if rng.gen_bool(0.5) {
             bv.set_bit(i);
@@ -227,7 +227,20 @@ fn compare_selects(b: &mut Criterion) {
         let sucds_darray = construct_sucds_darray(&mut rng, l);
         let bitm_vec = construct_bitm_vec(&mut rng, l);
 
-        let sample = Uniform::new(0, l / 3);
+        let sample = Uniform::new(0,
+                                  [
+                                      vers_vec.rank0(l),
+                                      rsdict.rank(l as u64 - 1, false) as usize,
+                                      bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                                      fair_bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                                      fid_vec.rank0(l as u64) as usize,
+                                      ind_bit_vec.rank_zeros(l as u64 - 1).unwrap() as usize,
+                                      rank9_vec.rank0(l as u64 - 1) as usize,
+                                      sucds_vec.rank0(l).unwrap(),
+                                      sucds_darray.rank0(l).unwrap(),
+                                      bitm_vec.rank0(l - 1),
+                                  ].iter().min().unwrap_or(&0));
+
 
         group.bench_with_input(BenchmarkId::new("vers", l), &l, |b, _| {
             b.iter_batched(
@@ -312,5 +325,5 @@ fn compare_selects(b: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, compare_ranks, compare_selects);
+criterion_group!(benches, compare_selects);
 criterion_main!(benches);
