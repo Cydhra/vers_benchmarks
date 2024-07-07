@@ -1,5 +1,5 @@
 use bio::data_structures::rank_select::RankSelect as BioRsVec;
-use bitm::{BitAccess, BitVec, Rank as BitmRank, RankSelect101111, Select0};
+use bitm::{BitAccess, BitVec, CombinedSampling, Rank as BitmRank, RankSelect101111, Select0};
 use bv::BitVec as BioVec;
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
 use fid::{BitVector as FidVec, FID};
@@ -95,7 +95,7 @@ fn construct_sucds_darray(rng: &mut ThreadRng, len: usize) -> SucDArray {
     SucDArray::from_bits(suc_bv.iter()).enable_rank()
 }
 
-fn construct_bitm_vec(rng: &mut ThreadRng, len: usize) -> RankSelect101111 {
+fn construct_bitm_vec(rng: &mut ThreadRng, len: usize) -> RankSelect101111<CombinedSampling> {
     let mut bv = Box::<[u64]>::with_zeroed_bits(len);
     for i in 0..len {
         if rng.gen_bool(0.5) {
@@ -325,5 +325,5 @@ fn compare_selects(b: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, compare_selects);
+criterion_group!(benches, compare_ranks, compare_selects);
 criterion_main!(benches);
