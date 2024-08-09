@@ -18,10 +18,7 @@ fn bench_rmq(b: &mut Criterion) {
         let sample = Uniform::new(0, sequence.len());
 
         let rmq = vers_vecs::FastRmq::from_vec(sequence.clone());
-        let ru_rmq = RmqMin::new(&sequence.iter().map(|x| *x as usize).collect::<Vec<_>>());
-        let creates_rmq = range_minimum_query::Rmq::from_iter(sequence);
-
-        group.bench_with_input(BenchmarkId::new("vers", l), &l, |b, _| {
+        group.bench_with_input(BenchmarkId::new("vers fast rmq", l), &l, |b, _| {
             b.iter_batched(
                 || {
                     let a = sample.sample(&mut rng);
@@ -36,7 +33,29 @@ fn bench_rmq(b: &mut Criterion) {
                 BatchSize::SmallInput,
             )
         });
+        drop(rmq);
 
+        if l < 1 << 26 {
+            let sparse_rmq = vers_vecs::BinaryRmq::from_vec(sequence.clone());
+            group.bench_with_input(BenchmarkId::new("vers binary rmq", l), &l, |b, _| {
+                b.iter_batched(
+                    || {
+                        let a = sample.sample(&mut rng);
+                        let b = sample.sample(&mut rng);
+                        if a < b {
+                            (a, b)
+                        } else {
+                            (b, a)
+                        }
+                    },
+                    |e| black_box(sparse_rmq.range_min(e.0, e.1)),
+                    BatchSize::SmallInput,
+                )
+            });
+            drop(sparse_rmq);
+        }
+
+        let ru_rmq = RmqMin::new(&sequence.iter().map(|x| *x as usize).collect::<Vec<_>>());
         group.bench_with_input(BenchmarkId::new("librualg", l), &l, |b, _| {
             b.iter_batched(
                 || {
@@ -52,7 +71,9 @@ fn bench_rmq(b: &mut Criterion) {
                 BatchSize::SmallInput,
             )
         });
+        drop(ru_rmq);
 
+        let creates_rmq = range_minimum_query::Rmq::from_iter(sequence);
         group.bench_with_input(BenchmarkId::new("crates rmq", l), &l, |b, _| {
             b.iter_batched(
                 || {
@@ -68,6 +89,7 @@ fn bench_rmq(b: &mut Criterion) {
                 BatchSize::SmallInput,
             )
         });
+        drop(creates_rmq);
     }
     group.finish();
 }
