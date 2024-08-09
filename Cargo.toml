@@ -24,6 +24,8 @@ librualg = "0.29"
 sucds = "0.8"
 bitm = "0.4"
 cseq = "0.1"
+wavelet-matrix = "0.4"
+qwt = "0.2.0"
 
 [[bench]]
 name = "rank_and_select"
@@ -43,6 +45,10 @@ harness = false
 
 [[bench]]
 name = "elias_fano_predecessor"
+harness = false
+
+[[bench]]
+name = "wavelet"
 harness = false
 
 [profile.bench]
