@@ -19,7 +19,7 @@ fid = "0.1"
 indexed_bitvec = "4.0"
 succinct = "0.5"
 elias-fano = "1.1"
-range_minimum_query = "0.1"
+range_minimum_query = { version = "0.2.0" }
 librualg = "0.29"
 sucds = "0.8"
 bitm = "0.4"
