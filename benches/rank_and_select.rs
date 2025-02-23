@@ -160,77 +160,77 @@ fn compare_ranks(b: &mut Criterion) {
             )
         });
 
-        // group.bench_with_input(BenchmarkId::new("rsdict", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(rsdict.rank(e, false)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("bio", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(bio_vec.rank_0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("fair bio", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(fair_bio_vec.rank_0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("fid", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(fid_vec.rank0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("indexed bitvector", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(ind_bit_vec.rank_zeros(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("succinct rank9", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng) as u64,
-        //         |e| black_box(rank9_vec.rank0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("sucds-rank9", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng),
-        //         |e| black_box(sucds_vec.rank0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("sucds-darray", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng),
-        //         |e| black_box(sucds_darray.rank0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
-        //
-        // group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
-        //     b.iter_batched(
-        //         || sample.sample(&mut rng),
-        //         |e| black_box(bitm_vec.rank0(e)),
-        //         BatchSize::SmallInput,
-        //     )
-        // });
+        group.bench_with_input(BenchmarkId::new("rsdict", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(rsdict.rank(e, false)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("bio", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(bio_vec.rank_0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("fair bio", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(fair_bio_vec.rank_0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("fid", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(fid_vec.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("indexed bitvector", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(ind_bit_vec.rank_zeros(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("succinct rank9", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(rank9_vec.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("sucds-rank9", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sucds_vec.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("sucds-darray", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sucds_darray.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(bitm_vec.rank0(e)),
+                BatchSize::SmallInput,
+            )
+        });
 
         group.bench_with_input(BenchmarkId::new("sux-r9", l), &l, |b, _| {
             b.iter_batched(
@@ -257,113 +257,113 @@ fn compare_selects(b: &mut Criterion) {
     let mut group = b.benchmark_group("Select: Randomized Input");
     group.plot_config(common::plot_config());
 
-    // for l in common::SIZES {
-    //     let vers_vec = common::construct_vers_vec(&mut rng, l);
-    //     let rsdict = construct_rsdict_vec(&mut rng, l);
-    //     let bio_vec = construct_bio_vec(&mut rng, l);
-    //     let fair_bio_vec = construct_fair_bio_vec(&mut rng, l);
-    //     let fid_vec = construct_fid_vec(&mut rng, l);
-    //     let ind_bit_vec = construct_ind_bit_vec(&mut rng, l);
-    //     let rank9_vec = construct_rank9_select_vec(&mut rng, l);
-    //     let sucds_vec = construct_sucds_vec(&mut rng, l);
-    //     let sucds_darray = construct_sucds_darray(&mut rng, l);
-    //     let bitm_vec = construct_bitm_vec(&mut rng, l);
-    //
-    //     let sample = Uniform::new(0,
-    //                               [
-    //                                   vers_vec.rank0(l),
-    //                                   rsdict.rank(l as u64 - 1, false) as usize,
-    //                                   bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
-    //                                   fair_bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
-    //                                   fid_vec.rank0(l as u64) as usize,
-    //                                   ind_bit_vec.rank_zeros(l as u64 - 1).unwrap() as usize,
-    //                                   rank9_vec.rank0(l as u64 - 1) as usize,
-    //                                   sucds_vec.rank0(l).unwrap(),
-    //                                   sucds_darray.rank0(l).unwrap(),
-    //                                   bitm_vec.rank0(l - 1),
-    //                               ].iter().min().unwrap_or(&0));
-    //
-    //
-    //     group.bench_with_input(BenchmarkId::new("vers", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng),
-    //             |e| black_box(vers_vec.select0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("rsdict", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(rsdict.select(e, false)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("bio", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(bio_vec.select_0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("fair bio", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(fair_bio_vec.select_0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("fid", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(fid_vec.select0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("indexed bitvector", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(ind_bit_vec.select_zeros(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("succinct rank9", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng) as u64,
-    //             |e| black_box(rank9_vec.select0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("sucds-rank9", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng),
-    //             |e| black_box(sucds_vec.select0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("sucds-darray", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng),
-    //             |e| black_box(sucds_darray.select1(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    //
-    //     group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
-    //         b.iter_batched(
-    //             || sample.sample(&mut rng),
-    //             |e| black_box(bitm_vec.select0(e)),
-    //             BatchSize::SmallInput,
-    //         )
-    //     });
-    // }
+    for l in common::SIZES {
+        let vers_vec = common::construct_vers_vec(&mut rng, l);
+        let rsdict = construct_rsdict_vec(&mut rng, l);
+        let bio_vec = construct_bio_vec(&mut rng, l);
+        let fair_bio_vec = construct_fair_bio_vec(&mut rng, l);
+        let fid_vec = construct_fid_vec(&mut rng, l);
+        let ind_bit_vec = construct_ind_bit_vec(&mut rng, l);
+        let rank9_vec = construct_rank9_select_vec(&mut rng, l);
+        let sucds_vec = construct_sucds_vec(&mut rng, l);
+        let sucds_darray = construct_sucds_darray(&mut rng, l);
+        let bitm_vec = construct_bitm_vec(&mut rng, l);
+
+        let sample = Uniform::new(0,
+                                  [
+                                      vers_vec.rank0(l),
+                                      rsdict.rank(l as u64 - 1, false) as usize,
+                                      bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                                      fair_bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                                      fid_vec.rank0(l as u64) as usize,
+                                      ind_bit_vec.rank_zeros(l as u64 - 1).unwrap() as usize,
+                                      rank9_vec.rank0(l as u64 - 1) as usize,
+                                      sucds_vec.rank0(l).unwrap(),
+                                      sucds_darray.rank0(l).unwrap(),
+                                      bitm_vec.rank0(l - 1),
+                                  ].iter().min().unwrap_or(&0));
+
+
+        group.bench_with_input(BenchmarkId::new("vers", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(vers_vec.select0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("rsdict", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(rsdict.select(e, false)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("bio", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(bio_vec.select_0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("fair bio", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(fair_bio_vec.select_0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("fid", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(fid_vec.select0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("indexed bitvector", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(ind_bit_vec.select_zeros(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("succinct rank9", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng) as u64,
+                |e| black_box(rank9_vec.select0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("sucds-rank9", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sucds_vec.select0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("sucds-darray", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sucds_darray.select1(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("bitm", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(bitm_vec.select0(e)),
+                BatchSize::SmallInput,
+            )
+        });
+    }
     group.finish();
 }
 

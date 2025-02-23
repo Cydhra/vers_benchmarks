@@ -1,86 +1,41 @@
-use std::time::Instant;
+/// A runner is a trait that defines a single benchmark function and associated parameter types.
+/// The trait is implemented on the data structure that is to be benchmarked, and the [`execute`] method
+/// takes an additional parameter that is passed to the benchmark function.
+///
+/// The trait is implemented using the [`runner!`] macro.
+pub(crate) trait Runner {
+    type Context;
 
-/// The minimum time any measurement has to run to avoid noise in nanoseconds. Currently, 100 milliseconds.
-const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
+    type Param;
 
-/// The runtime of one variance test iteration. Currently, 3 seconds.
-const VARIANCE_TEST_RUNTIME: u64 = 3_000_000_000;
+    fn create_context(&self, size: usize) -> Self::Context;
 
-pub(crate) struct Runner<F: Fn() -> ()> {
-    f: F,
+    fn prepare_params(&self, number: usize, size: usize) -> Box<[Self::Param]>;
+
+    fn execute(&self, context: &Self::Context, param: &Self::Param);
 }
 
-impl<F: Fn() -> ()> Runner<F> {
+#[macro_export]
+macro_rules! runner {
+    ($name:ident, create_context = |$size:ident| { $($ctx_body:tt)* }, prepare_params = |$number:ident, $size_params:ident| { $($param_body:tt)* }, execute = |$context:ident: $context_type:ty, $param:ident: $param_type:ty| { $($body:tt)* }) => {
+        pub(crate) struct $name;
 
-    pub(crate) fn new(f: F) -> Self {
-        Self { f }
-    }
+        impl runner::Runner for $name {
+            type Context = $context_type;
 
-    pub(crate) fn estimate_timing(&self) -> u64 {
-        let mut timing = 0;
-        let mut repetitions = 1;
+            type Param = $param_type;
 
-        loop {
-            let start = Instant::now();
-            for _ in 0..repetitions {
-                (self.f)();
-            }
-            timing = start.elapsed().as_nanos();
-
-            if timing > MINIMUM_RUNNING_TIME as u128 {
-                break;
-            } else {
-                repetitions *= 2;
-            }
-        }
-
-        (timing / repetitions) as u64
-    }
-
-    pub(crate) fn estimate_mean_deviation(&self, timing: u64) -> (f64, f64) {
-        let start = Instant::now();
-        let mut measurement_length = MINIMUM_RUNNING_TIME / timing;
-        let mut num_measurements = VARIANCE_TEST_RUNTIME / MINIMUM_RUNNING_TIME;
-
-        let mut samples = Vec::with_capacity(num_measurements as usize);
-        let mut deviation_samples = Vec::with_capacity(10);
-        let mut last_mean = 0.0;
-
-        loop {
-            let mut immediate_samples = Vec::with_capacity(num_measurements as usize);
-            for _ in 0..num_measurements {
-                let start = Instant::now();
-                for _ in 0..measurement_length {
-                    (self.f)();
-                }
-                immediate_samples.push(start.elapsed().as_nanos());
+            fn create_context(&self, $size: usize) -> Self::Context {
+                $($ctx_body)*
             }
 
-            samples.append(&mut immediate_samples);
-            
-            samples.sort_unstable();
-            let quartile_size = samples.len() / 4;
+            fn prepare_params(&self, $number: usize, $size_params: usize) -> Box<[Self::Param]> {
+                $($param_body)*
+            }
 
-            let mean = samples[quartile_size..quartile_size * 3].iter().map(|&x| f64::from(x as u32)).sum::<f64>() / (quartile_size * 2) as f64;
-            let deviation = (samples[quartile_size..quartile_size * 3].iter().map(|&x| (f64::from(x as u32) - mean) * (f64::from(x as u32) - mean)).sum::<f64>() / (quartile_size * 2 - 1) as f64).sqrt();
-            deviation_samples.push(deviation);
-
-            println!("Standard Deviation: {}", deviation);
-
-            if deviation_samples.len() >= 3 {
-                let last_deviation = deviation_samples.last().unwrap();
-                let relative_change = (last_deviation - deviation_samples[deviation_samples.len() - 2]) / deviation_samples[deviation_samples.len() - 2];
-                let relative_change2 = (last_deviation - deviation_samples[deviation_samples.len() - 3]) / deviation_samples[deviation_samples.len() - 3];
-
-                if relative_change.abs() < 0.01 && relative_change2.abs() < 0.01 {
-                    println!("Convergence reached.");
-                    last_mean = mean;
-                    break;
-                }
+            fn execute(&self, $context: &Self::Context, $param: &Self::Param) {
+                $($body)*
             }
         }
-
-        println!("Analysis took {} ms", start.elapsed().as_millis());
-        (last_mean / measurement_length as f64, deviation_samples.last().unwrap() / measurement_length as f64)
     }
 }
