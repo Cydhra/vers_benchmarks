@@ -11,7 +11,7 @@ const CHUNK_TIME: u64 = 10_000_000_000;
 /// The function can be benchmarked multiple times in interleave with other benchmarks.
 pub(crate) struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
-    name: &'a str,
+    pub(crate) name: &'a str,
     repetitions: u64,
     samples: Vec<u64>,
     size: usize,
@@ -90,10 +90,21 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         println!("Appending {} samples to {} benchmark", samples.len(), self.name);
         self.samples.extend(samples);
 
+        let (mean, _, relative_std_deviation, _, _) = self.get_final_measurement();
+
+        println!("Mean: {mean:.2} ns +- {relative_std_deviation:.4}%");
+    }
+
+    /// Get the mean, standard deviation,
+    /// relative standard deviation (i.e., standard deviation divided by mean),
+    /// min, and max of all samples that have been measured so far.
+    pub(crate) fn get_final_measurement(&self) -> (f64, f64, f64, f64, f64) {
         let mean = (self.samples.iter().sum::<u64>() as f64 / self.samples.len() as f64) / self.repetitions as f64;
         let std_deviation = (self.samples.iter().map(|&x| ((x as f64 / self.repetitions as f64) - mean).powf(2.0)).sum::<f64>() / (self.samples.len() - 1) as f64).sqrt();
         let relative_std_deviation = std_deviation / mean;
+        let min = *self.samples.iter().min().unwrap() as f64 / self.repetitions as f64;
+        let max = *self.samples.iter().max().unwrap() as f64 / self.repetitions as f64;
 
-        println!("Mean: {mean:.2} ns +- {relative_std_deviation:.4}%");
+        (mean, std_deviation, relative_std_deviation, min, max)
     }
 }

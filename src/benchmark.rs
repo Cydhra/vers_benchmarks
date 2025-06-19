@@ -1,8 +1,13 @@
 use crate::measure::Measurement;
 
-/// A benchmark is a collection of benchmark groups that are run interleave.
-/// In the end, the group is converted into a report that can later be merged with more reports
-/// for a final benchmark report.
+/// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
+/// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
+/// The runner is called repeatedly to create one sample measurement, and several runs of measurements
+/// are repeated by the `Measurement` to benchmark the function for a given state size.
+/// The measurement can then be repeated for different state sizes to create a series.
+///
+/// [`Measurements`]: Measurement
+/// [`Runner`]: crate::runner::Runner
 pub(crate) struct Benchmark<'a, State, Param> {
     name: String,
     runners: Vec<Measurement<'a, State, Param>>
@@ -27,6 +32,11 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
             for runner in self.runners.iter_mut() {
                 runner.benchmark_chunk();
             }
+        }
+
+        for runner in &self.runners {
+            let (mean, std_dev, rel_std_dev, min, max) = runner.get_final_measurement();
+            println!("[{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, runner.name, mean, min, max, std_dev, rel_std_dev)
         }
     }
 }
