@@ -12,8 +12,9 @@ plotters = "0.3.5"
 vers-vecs = { path = "vers", features = ["simd"] }
 
 # comparison benchmarks libraries
-rsdict = { version = "0.0.8", features = ["simd"] }
-bio = "2.0"
+#rsdict = { version = "0.0.8", features = ["simd"] }
+rsdict = "0.0.8"
+bio = "2.3"
 bv = "0.11"
 fid = "0.1"
 indexed_bitvec = "4.0"
@@ -22,11 +23,11 @@ elias-fano = "1.1"
 range_minimum_query = { version = "0.2.0" }
 librualg = "0.29"
 sucds = "0.8"
-bitm = "0.4"
+bitm = "0.5.1"
 cseq = "0.1"
 wavelet-matrix = "0.4"
-qwt = "0.2.0"
-sux = "0.4"
+qwt = "0.3.1"
+sux = "0.7.4"
 
 [[bench]]
 name = "rank_and_select"
