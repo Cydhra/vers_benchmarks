@@ -62,7 +62,7 @@ runner!(RsDictRunner,
 );
 
 pub(crate) fn benchmark() {
-    let mut benchmark = Benchmark::<BitVecState, u64>::new("Rank");
+    let mut benchmark = Benchmark::<BitVecState, u64>::new("Rank", vec![128, 256]);
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
     benchmark.benchmark();
