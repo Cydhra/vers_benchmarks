@@ -13,7 +13,7 @@ use succinct::{BinSearchSelect, BitRankSupport, BitVecPush, BitVector as Succinc
 use sucds::bit_vectors::darray::DArray as SucDArray;
 use sucds::bit_vectors::rank9sel::Rank9Sel as SucRank9Vec;
 use sucds::bit_vectors::{BitVector as SucBitVec, Rank, Select};
-use sux::prelude::{Block32Counters, Rank9 as Sux9, RankSmall as SuxRSmall, RankSmall, RankZero};
+use sux::prelude::{Block32Counters, Rank9 as Sux9, RankSmall, RankZero};
 use sux::rank_small;
 
 mod common;
