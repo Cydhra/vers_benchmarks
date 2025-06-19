@@ -1,6 +1,5 @@
-use std::marker::PhantomData;
-use std::time::Instant;
 use crate::runner::Runner;
+use std::time::Instant;
 
 /// The minimum time any measurement has to run to avoid noise in nanoseconds. Currently, 100 milliseconds.
 const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
@@ -14,21 +13,36 @@ pub(crate) struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
     name: &'a str,
     repetitions: u64,
-    samples: Vec<u64>
+    samples: Vec<u64>,
+    size: usize,
 }
 
-impl<'a, S, P> Measurement<'a, S, P> {
-    pub(crate) fn new(name: &'a str, func: &'a dyn Runner<Context=S, Param=P>) -> Self {
-        Self { func, name, repetitions: 0, samples: Vec::new() }
+impl<'a, State, Param> Measurement<'a, State, Param> {
+    pub(crate) fn new(name: &'a str, func: &'a dyn Runner<Context=State, Param=Param>) -> Self {
+        Self { func, name, repetitions: 0, samples: Vec::new(), size: 0 }
+    }
+
+    /// Initialize the `Measurement` with a new data structure size, and reset all previously collected
+    /// measurements.
+    /// A call to [`estimate_timing`] is necessary before [`benchmark`] can be called again.
+    pub(crate) fn initialize_measurement(&mut self, size: usize) {
+        self.samples.clear();
+        self.size = size;
+        self.repetitions = 0;
     }
 
     pub(crate) fn estimate_timing(&mut self) {
-        let mut timing = 0;
+        if self.size == 0 {
+            eprintln!("Please call initialize_measurement(size) before starting timing.");
+            return;
+        }
+
+        let mut timing;
         let mut repetitions = 1;
 
         loop {
-            let state = self.func.create_context(128);
-            let params = self.func.prepare_params(repetitions as usize, 128);
+            let state = self.func.create_context(self.size);
+            let params = self.func.prepare_params(repetitions as usize, self.size);
 
             let start = Instant::now();
             for _ in 0..repetitions {
@@ -60,8 +74,8 @@ impl<'a, S, P> Measurement<'a, S, P> {
         println!("measuring chunk for {}", self.name);
         let chunk_start = Instant::now();
         loop {
-            let state = self.func.create_context(128);
-            let params = self.func.prepare_params(self.repetitions as usize, 128);
+            let state = self.func.create_context(self.size);
+            let params = self.func.prepare_params(self.repetitions as usize, self.size);
 
             let start = Instant::now();
             for _ in 0..self.repetitions {

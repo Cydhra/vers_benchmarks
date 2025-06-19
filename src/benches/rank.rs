@@ -1,13 +1,11 @@
-use std::hint::black_box;
-use std::panic::panic_any;
-use rand::prelude::ThreadRng;
-use rand::Rng;
-use rsdict::RsDict;
 use crate::benchmark::Benchmark;
-use vers_vecs::{BitVec, RsVec};
-use BitVecState::*;
 use crate::measure::Measurement;
 use crate::runner;
+use rand::Rng;
+use rsdict::RsDict;
+use std::hint::black_box;
+use vers_vecs::{BitVec, RsVec};
+use BitVecState::*;
 
 pub(crate) enum BitVecState {
     Vers(RsVec),
@@ -67,4 +65,5 @@ pub(crate) fn benchmark() {
     let mut benchmark = Benchmark::<BitVecState, u64>::new("Rank");
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
+    benchmark.benchmark();
 }
