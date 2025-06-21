@@ -4,6 +4,7 @@ use crate::runner;
 use rand::Rng;
 use rsdict::RsDict;
 use std::hint::black_box;
+use std::path::Path;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
 
@@ -61,9 +62,9 @@ runner!(RsDictRunner,
     }
 );
 
-pub(crate) fn benchmark() {
+pub(crate) fn benchmark(output_dir: &Path) {
     let mut benchmark = Benchmark::<BitVecState, u64>::new("Rank", vec![128, 256]);
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
-    benchmark.benchmark();
+    benchmark.benchmark(output_dir);
 }

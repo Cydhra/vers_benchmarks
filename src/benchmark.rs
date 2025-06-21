@@ -1,4 +1,7 @@
+use std::fs::OpenOptions;
 use crate::measure::Measurement;
+use std::io::Write;
+use std::path::Path;
 
 /// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
 /// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
@@ -28,8 +31,17 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         self.runners.push(runner);
     }
 
-    pub(crate) fn benchmark(&mut self) {
+    pub(crate) fn benchmark(&mut self, output_dir: &Path) {
         let mut size_index = 0;
+
+        let path = output_dir.join(Path::new(&(self.name.to_owned().to_lowercase() + ".csv")));
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(path)
+            .unwrap();
+
         // don't borrow the size vec
         while size_index < self.sizes.len() {
             let current_size =  self.sizes[size_index];
@@ -47,7 +59,8 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
 
             for runner in &self.runners {
                 let (mean, std_dev, rel_std_dev, min, max) = runner.get_final_measurement();
-                println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_dev, rel_std_dev * 100.0)
+                println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_dev, rel_std_dev * 100.0);
+                writeln!(file, "{},{},{},{},{},{},{}", self.name, runner.name, current_size, mean, min, max, std_dev).unwrap_or_else(|e| eprintln!("WARNING: {}", e));
             }
 
             size_index += 1;
