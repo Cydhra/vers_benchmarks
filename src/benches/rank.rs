@@ -1,9 +1,10 @@
 use crate::benchmark::Benchmark;
 use crate::measure::Measurement;
 use crate::runner;
-use rand::Rng;
+use rand::{Rng, RngCore};
 use rsdict::RsDict;
 use std::hint::black_box;
+use std::ops::{Div, Rem};
 use std::path::Path;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
@@ -15,7 +16,21 @@ pub(crate) enum BitVecState {
 
 runner!(
     VersRunner,
-    create_context = |size| { Vers(RsVec::from(BitVec::from_zeros(size))) },
+    create_context = |size| {
+        let mut bitvec = BitVec::with_capacity(size);
+        let full_limbs = size.div(64);
+        let mut rng = rand::thread_rng();
+        for _ in 0..full_limbs {
+            bitvec.append_word(rng.gen());
+        }
+
+        let remainder = size.rem(64);
+        if remainder > 0 {
+            bitvec.append_bit(rng.next_u64() % 2)
+        }
+
+        Vers(bitvec.into())
+    },
     prepare_params = |number, len| {
         let mut rng = rand::thread_rng();
         let mut vec = Vec::with_capacity(number);
