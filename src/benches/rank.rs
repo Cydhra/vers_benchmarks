@@ -13,9 +13,9 @@ pub(crate) enum BitVecState {
     RsD(RsDict),
 }
 
-runner!(VersRunner,
+runner!(
+    VersRunner,
     create_context = |size| { Vers(RsVec::from(BitVec::from_zeros(size))) },
-
     prepare_params = |number, len| {
         let mut rng = rand::thread_rng();
         let mut vec = Vec::with_capacity(number);
@@ -24,7 +24,6 @@ runner!(VersRunner,
         }
         vec.into_boxed_slice()
     },
-
     execute = |rs: BitVecState, idx: u64| {
         if let Vers(rs) = rs {
             black_box(rs.rank0(*idx as usize));
@@ -34,7 +33,8 @@ runner!(VersRunner,
     }
 );
 
-runner!(RsDictRunner,
+runner!(
+    RsDictRunner,
     create_context = |size| {
         let mut rng = rand::thread_rng();
         let mut rs_dict = RsDict::with_capacity(size);
@@ -43,7 +43,6 @@ runner!(RsDictRunner,
         }
         RsD(rs_dict)
     },
-
     prepare_params = |number, len| {
         let mut rng = rand::thread_rng();
         let mut vec = Vec::with_capacity(number);
@@ -52,7 +51,6 @@ runner!(RsDictRunner,
         }
         vec.into_boxed_slice()
     },
-
     execute = |rs: BitVecState, idx: u64| {
         if let RsD(rs) = rs {
             black_box(rs.rank(*idx, false));
@@ -63,7 +61,37 @@ runner!(RsDictRunner,
 );
 
 pub(crate) fn benchmark(output_dir: &Path) {
-    let mut benchmark = Benchmark::<BitVecState, u64>::new("Rank", vec![128, 256]);
+    let mut benchmark = Benchmark::<BitVecState, u64>::new(
+        "Rank",
+        vec![
+            1 << 7,
+            1 << 8,
+            1 << 9,
+            1 << 10,
+            1 << 11,
+            1 << 12,
+            1 << 13,
+            1 << 14,
+            1 << 15,
+            1 << 16,
+            1 << 17,
+            1 << 18,
+            1 << 19,
+            1 << 20,
+            1 << 21,
+            1 << 22,
+            1 << 23,
+            1 << 24,
+            1 << 25,
+            1 << 26,
+            1 << 27,
+            1 << 28,
+            1 << 29,
+            1 << 30,
+            1 << 31,
+            1 << 32,
+        ],
+    );
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
     benchmark.benchmark(output_dir);
