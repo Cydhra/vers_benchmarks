@@ -71,7 +71,7 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         }
         let mut samples = Vec::with_capacity(CHUNK_TIME as usize / MINIMUM_RUNNING_TIME as usize);
 
-        println!("measuring chunk for {}", self.name);
+        println!("Measuring chunk for {}", self.name);
         let chunk_start = Instant::now();
         loop {
             let state = self.func.create_context(self.size);
@@ -87,12 +87,11 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
                 break;
             }
         }
-        println!("Appending {} samples to {} benchmark", samples.len(), self.name);
         self.samples.extend(samples);
 
         let (mean, _, relative_std_deviation, _, _) = self.get_final_measurement();
 
-        println!("Mean: {mean:.2} ns +- {relative_std_deviation:.4}%");
+        println!("Mean: {mean:.2} ns +- {:.4}%", relative_std_deviation * 100.0);
     }
 
     /// Get the mean, standard deviation,

@@ -1,5 +1,5 @@
-use std::fs::OpenOptions;
 use crate::measure::Measurement;
+use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
@@ -35,7 +35,6 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         let mut size_index = 0;
 
         let path = output_dir.join(Path::new(&(self.name.to_owned().to_lowercase() + ".csv")));
-
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
@@ -45,13 +44,15 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         // don't borrow the size vec
         while size_index < self.sizes.len() {
             let current_size =  self.sizes[size_index];
+            println!("Benchmarking {} elements...", current_size);
 
             for runner in self.runners.iter_mut() {
                 runner.initialize_measurement(current_size);
                 runner.estimate_timing();
             }
 
-            for _ in 0..2 {
+            for i in 0..5 {
+                println!("Round {}...", i);
                 for runner in self.runners.iter_mut() {
                     runner.benchmark_chunk();
                 }
