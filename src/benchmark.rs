@@ -58,7 +58,7 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
                 }
             }
 
-            for runner in &self.runners {
+            for runner in self.runners.iter_mut() {
                 let (mean, std_dev, rel_std_dev, min, max) = runner.get_final_measurement();
                 println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_dev, rel_std_dev * 100.0);
                 writeln!(file, "{},{},{},{},{},{},{}", self.name, runner.name, current_size, mean, min, max, std_dev).unwrap_or_else(|e| eprintln!("WARNING: {}", e));

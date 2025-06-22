@@ -2,6 +2,8 @@ use crate::runner::Runner;
 use std::time::Instant;
 
 /// The minimum time any measurement has to run to avoid noise in nanoseconds. Currently, 100 milliseconds.
+/// The benchmark repeats the measured function to reach this target time, and averages out the
+/// runtime.
 const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
 
 // How long each chunk of the benchmark should run in nanoseconds. Currently, 10 seconds.
@@ -95,15 +97,21 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
     }
 
     /// Get the mean, standard deviation,
-    /// relative standard deviation (i.e., standard deviation divided by mean),
+    /// relative standard deviation (i.e., standard deviation divided by median),
     /// min, and max of all samples that have been measured so far.
-    pub(crate) fn get_final_measurement(&self) -> (f64, f64, f64, f64, f64) {
-        let mean = (self.samples.iter().sum::<u64>() as f64 / self.samples.len() as f64) / self.repetitions as f64;
-        let std_deviation = (self.samples.iter().map(|&x| ((x as f64 / self.repetitions as f64) - mean).powf(2.0)).sum::<f64>() / (self.samples.len() - 1) as f64).sqrt();
-        let relative_std_deviation = std_deviation / mean;
-        let min = *self.samples.iter().min().unwrap() as f64 / self.repetitions as f64;
-        let max = *self.samples.iter().max().unwrap() as f64 / self.repetitions as f64;
+    ///
+    /// The function requires a mutable reference because it sorts the measurements in-place.
+    pub(crate) fn get_final_measurement(&mut self) -> (f64, f64, f64, f64, f64) {
+        self.samples.sort_unstable();
 
-        (mean, std_deviation, relative_std_deviation, min, max)
+        // technically not the median as defined by literature, but since this is the median of means
+        // anyway, I am not too concerned.
+        let median = self.samples[self.samples.len() / 2] as f64 / self.repetitions as f64;
+        let std_deviation = (self.samples.iter().map(|&x| ((x as f64 / self.repetitions as f64) - median).powf(2.0)).sum::<f64>() / (self.samples.len() - 1) as f64).sqrt();
+        let relative_std_deviation = std_deviation / median;
+        let min = self.samples[0] as f64 / self.repetitions as f64;
+        let max = self.samples[self.samples.len() - 1] as f64 / self.repetitions as f64;
+
+        (median, std_deviation, relative_std_deviation, min, max)
     }
 }
