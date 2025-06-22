@@ -53,5 +53,5 @@ harness = false
 name = "wavelet"
 harness = false
 
-[profile.bench]
+[profile.release]
 lto = true
