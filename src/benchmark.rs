@@ -3,6 +3,8 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
+const NUM_ROUNDS: usize = 3;
+
 /// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
 /// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
 /// The runner is called repeatedly to create one sample measurement, and several runs of measurements
@@ -51,8 +53,8 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
                 runner.estimate_timing();
             }
 
-            for i in 0..5 {
-                println!("Round {}...", i);
+            for i in 0..NUM_ROUNDS {
+                println!("Round {}/{NUM_ROUNDS}...", i + 1);
                 for runner in self.runners.iter_mut() {
                     runner.benchmark_chunk();
                 }

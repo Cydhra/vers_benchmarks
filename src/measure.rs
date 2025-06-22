@@ -6,11 +6,11 @@ use std::time::Instant;
 /// runtime.
 const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
 
-// How long each chunk of the benchmark should run in nanoseconds. Currently, 10 seconds.
-const CHUNK_TIME: u64 = 10_000_000_000;
+/// How long each chunk of the benchmark should run in nanoseconds. Currently, 5 seconds.
+const CHUNK_TIME: u64 = 5_000_000_000;
 
 /// A single benchmark measurement of one function.
-/// The function can be benchmarked multiple times in interleave with other benchmarks.
+/// The function can be benchmarked multiple times interleaved with other benchmarks.
 pub(crate) struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
     pub(crate) name: &'a str,
@@ -93,7 +93,7 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
 
         let (mean, _, relative_std_deviation, _, _) = self.get_final_measurement();
 
-        println!("Mean: {mean:.2} ns +- {:.4}%", relative_std_deviation * 100.0);
+        println!("Median: {mean:.2} ns +- {:.4}%", relative_std_deviation * 100.0);
     }
 
     /// Get the mean, standard deviation,
