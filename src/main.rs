@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::process::exit;
-use crate::benches::rank;
+use crate::benches::*;
 
 mod measure;
 mod benchmark;
@@ -19,4 +19,5 @@ fn main() {
         });
 
     rank::benchmark(&directory);
+    select::benchmark(&directory);
 }
