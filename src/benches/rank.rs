@@ -6,7 +6,7 @@ use bitm::{BitAccess, BitVec as BitmBV, Rank, RankSelect101111 as BitmVec};
 use bv::BitVec as BVBitVec;
 use fid::{BitVector as FidVec, FID};
 use indexed_bitvec::IndexedBits as IndexedVec;
-use rand::distributions::Standard;
+use rand::distributions::Uniform;
 use rand::Rng;
 use rsdict::RsDict;
 use std::hint::black_box;
@@ -48,10 +48,11 @@ runner!(
     VersRunner,
     create_context = |size| {
         let mut bitvec = BitVec::with_capacity(size);
+        let sample = Uniform::new(0, u64::MAX);
         let full_limbs = size.div(64);
         let mut rng = rand::thread_rng();
         for _ in 0..full_limbs {
-            bitvec.append_word(rng.gen());
+            bitvec.append_word(rng.sample(sample));
         }
 
         Vers(bitvec.into())
@@ -140,7 +141,8 @@ runner!(
     IndexedBitVecRunner,
     create_context = |size| {
         let rng = rand::thread_rng();
-        let vec = rng.sample_iter(Standard).take(size / 8).collect::<Vec<u8>>();
+        let sample = Uniform::new(0, u8::MAX);
+        let vec = rng.sample_iter(sample).take(size / 8).collect::<Vec<u8>>();
         IndexedBV(IndexedVec::build_from_bytes(vec, size as u64).unwrap())
     },
     prepare_params = |number, len| {
@@ -161,7 +163,7 @@ runner!(
         let mut rng = rand::thread_rng();
         let mut bit_vec = SuccinctBV::with_capacity(size as u64);
         for _ in 0..size {
-            bit_vec.push_bit(rng.sample(Standard))
+            bit_vec.push_bit(rng.gen_bool(0.5))
         }
         SuccinctR9(SuccinctR9Vec::new(bit_vec))
     },
@@ -181,10 +183,11 @@ runner!(
     SucDsR9Runner,
     create_context = |size| {
         let mut rng = rand::thread_rng();
+        let sample = Uniform::new(0, u64::MAX);
         let mut suc_bv = SucBitVec::with_capacity(size);
         for _ in 0..size.div(64) {
             suc_bv
-                .push_bits(rng.sample(Standard), 64)
+                .push_bits(rng.sample(sample) as usize, 64)
                 .expect("Failed to push bits into sucds bitvector");
         }
 
@@ -206,10 +209,11 @@ runner!(
     SucDsDARunner,
     create_context = |size| {
         let mut rng = rand::thread_rng();
+        let sample = Uniform::new(0, u64::MAX);
         let mut suc_bv = SucBitVec::with_capacity(size);
         for _ in 0..size.div(64) {
             suc_bv
-                .push_bits(rng.sample(Standard), 64)
+                .push_bits(rng.sample(sample) as usize, 64)
                 .expect("Failed to push bits into sucds bitvector");
         }
 
