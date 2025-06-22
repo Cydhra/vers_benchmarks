@@ -36,6 +36,7 @@
         ylabel: "Time (ns)",
         xscale: "log",
         cycle: lq.color.map.petroff8,
+        ylim: (0, auto),
 
         ..for (name, line) in dict.pairs() {
             (lq.plot(
