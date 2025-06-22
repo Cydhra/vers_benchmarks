@@ -1,17 +1,47 @@
 use crate::benchmark::Benchmark;
 use crate::measure::Measurement;
 use crate::runner;
-use rand::{Rng, RngCore};
+use bio::data_structures::rank_select::RankSelect as BioRsVec;
+use bitm::{BitAccess, BitVec as BitmBV, Rank, RankSelect101111 as BitmVec};
+use bv::BitVec as BVBitVec;
+use fid::{BitVector as FidVec, FID};
+use indexed_bitvec::IndexedBits as IndexedVec;
+use rand::distributions::Standard;
+use rand::Rng;
 use rsdict::RsDict;
 use std::hint::black_box;
-use std::ops::{Div, Rem};
+use std::ops::Div;
 use std::path::Path;
+use succinct::{BitRankSupport, BitVecPush, BitVector as SuccinctBV, Rank9 as SuccinctR9Vec};
+use sucds::bit_vectors::darray::DArray as SucDsDVec;
+use sucds::bit_vectors::rank9sel::Rank9Sel as SucDsR9Vec;
+use sucds::bit_vectors::{BitVector as SucBitVec, Rank as SucdsR9Rank};
+use sux::prelude::{Block32Counters, Rank9 as SuxR9Vec, RankSmall as SuxSmallVec, RankZero};
+use sux::rank_small;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
 
 pub(crate) enum BitVecState {
     Vers(RsVec),
     RsD(RsDict),
+    Bio(BioRsVec),
+    Fid(FidVec),
+    IndexedBV(IndexedVec<Vec<u8>>),
+    SuccinctR9(SuccinctR9Vec<SuccinctBV<u64>>),
+    SucDsR9(SucDsR9Vec),
+    SucDsDA(SucDsDVec),
+    Bitm(BitmVec),
+    SuxR9(SuxR9Vec),
+    SuxSmall(SuxSmallVec<1, 10, sux::bits::BitVec, Box<[usize]>, Box<[Block32Counters<1, 10>]>>),
+}
+
+fn create_u64_params(number: usize, len: usize) -> Box<[u64]> {
+    let mut rng = rand::thread_rng();
+    let mut vec = Vec::with_capacity(number);
+    for _ in 0..number {
+        vec.push(rng.gen_range(0..len as u64));
+    }
+    vec.into_boxed_slice()
 }
 
 runner!(
@@ -24,24 +54,14 @@ runner!(
             bitvec.append_word(rng.gen());
         }
 
-        let remainder = size.rem(64);
-        if remainder > 0 {
-            bitvec.append_bit(rng.next_u64() % 2)
-        }
-
         Vers(bitvec.into())
     },
     prepare_params = |number, len| {
-        let mut rng = rand::thread_rng();
-        let mut vec = Vec::with_capacity(number);
-        for _ in 0..number {
-            vec.push(rng.gen_range(0..len as u64));
-        }
-        vec.into_boxed_slice()
+        create_u64_params(number, len)
     },
-    execute = |rs: BitVecState, idx: u64| {
-        if let Vers(rs) = rs {
-            black_box(rs.rank0(*idx as usize));
+    execute = |bv: BitVecState, idx: u64| {
+        if let Vers(bv) = bv {
+            black_box(bv.rank0(*idx as usize));
         } else {
             panic!("Invalid state");
         }
@@ -59,16 +79,221 @@ runner!(
         RsD(rs_dict)
     },
     prepare_params = |number, len| {
-        let mut rng = rand::thread_rng();
-        let mut vec = Vec::with_capacity(number);
-        for _ in 0..number {
-            vec.push(rng.gen_range(0..len as u64));
-        }
-        vec.into_boxed_slice()
+        create_u64_params(number, len)
     },
-    execute = |rs: BitVecState, idx: u64| {
-        if let RsD(rs) = rs {
-            black_box(rs.rank(*idx, false));
+    execute = |bv: BitVecState, idx: u64| {
+        if let RsD(bv) = bv {
+            black_box(bv.rank(*idx, false));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    BioRunner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut bio_vec = BVBitVec::new_fill(false, size as u64);
+        for i in 0..size {
+            bio_vec.set(i as u64, rng.gen_bool(0.5));
+        }
+        // k chosen to be a fair comparison to vers. We can also adapt it with growing size
+        // as it is intended, but the library is so slow, it doesn't matter in any case.
+        Bio(BioRsVec::new(bio_vec, 512 / 32))
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let Bio(bv) = bv {
+            black_box(bv.rank_0(*idx));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    FidRunner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut fid_vec = FidVec::new();
+        for _ in 0..size {
+            fid_vec.push(rng.gen_bool(0.5));
+        }
+        Fid(fid_vec)
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let Fid(bv) = bv {
+            black_box(bv.rank0(*idx));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    IndexedBitVecRunner,
+    create_context = |size| {
+        let rng = rand::thread_rng();
+        let vec = rng.sample_iter(Standard).take(size / 8).collect::<Vec<u8>>();
+        IndexedBV(IndexedVec::build_from_bytes(vec, size as u64).unwrap())
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let IndexedBV(bv) = bv {
+            black_box(bv.rank_zeros(*idx));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    SuccinctR9Runner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut bit_vec = SuccinctBV::with_capacity(size as u64);
+        for _ in 0..size {
+            bit_vec.push_bit(rng.sample(Standard))
+        }
+        SuccinctR9(SuccinctR9Vec::new(bit_vec))
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let SuccinctR9(bv
+        )
+        = bv {
+            black_box(bv.rank0(*idx));
+        }
+    }
+);
+
+runner!(
+    SucDsR9Runner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut suc_bv = SucBitVec::with_capacity(size);
+        for _ in 0..size.div(64) {
+            suc_bv
+                .push_bits(rng.sample(Standard), 64)
+                .expect("Failed to push bits into sucds bitvector");
+        }
+
+        SucDsR9(SucDsR9Vec::new(suc_bv))
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let SucDsR9(bv) = bv {
+            black_box(bv.rank0(*idx as usize));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    SucDsDARunner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut suc_bv = SucBitVec::with_capacity(size);
+        for _ in 0..size.div(64) {
+            suc_bv
+                .push_bits(rng.sample(Standard), 64)
+                .expect("Failed to push bits into sucds bitvector");
+        }
+
+        SucDsDA(SucDsDVec::from_bits(suc_bv.iter()).enable_rank())
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let SucDsDA(bv) = bv {
+            black_box(bv.rank0(*idx as usize));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    BitmRunner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut bv = Box::<[u64]>::with_zeroed_bits(size);
+        for i in 0..size {
+            if rng.gen_bool(0.5) {
+                bv.set_bit(i);
+            }
+        }
+
+        Bitm(bv.into())
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let Bitm(bv) = bv {
+            black_box(bv.rank0(*idx as usize));
+        }
+    }
+);
+
+runner!(
+    SuxR9Runner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut bit_vec = sux::prelude::BitVec::new(size);
+        for i in 0..size {
+            if rng.gen_bool(0.5) {
+                bit_vec.set(i, true)
+            }
+        }
+
+        SuxR9(SuxR9Vec::new(bit_vec))
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let SuxR9(bv) = bv {
+            black_box(bv.rank_zero(*idx as usize));
+        } else {
+            panic!("Invalid state");
+        }
+    }
+);
+
+runner!(
+    SuxSmallRunner,
+    create_context = |size| {
+        let mut rng = rand::thread_rng();
+        let mut bit_vec = sux::prelude::BitVec::new(size);
+        for i in 0..size {
+            if rng.gen_bool(0.5) {
+                bit_vec.set(i, true)
+            }
+        }
+    
+        SuxSmall(rank_small![2; bit_vec])
+    },
+    prepare_params = |number, len| {
+        create_u64_params(number, len)
+    },
+    execute = |bv: BitVecState, idx: u64| {
+        if let SuxSmall(bv) = bv {
+            black_box(bv.rank_zero(*idx as usize));
         } else {
             panic!("Invalid state");
         }
@@ -109,5 +334,14 @@ pub(crate) fn benchmark(output_dir: &Path) {
     );
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
+    benchmark.add_measurement(Measurement::new("Bio", &BioRunner));
+    benchmark.add_measurement(Measurement::new("FID", &FidRunner));
+    benchmark.add_measurement(Measurement::new("IBV", &IndexedBitVecRunner));
+    benchmark.add_measurement(Measurement::new("SctR9", &SuccinctR9Runner));
+    benchmark.add_measurement(Measurement::new("SDSR9", &SucDsR9Runner));
+    benchmark.add_measurement(Measurement::new("SDSDA", &SucDsDARunner));
+    benchmark.add_measurement(Measurement::new("Bitm", &BitmRunner));
+    benchmark.add_measurement(Measurement::new("SuxR9", &SuxR9Runner));
+    benchmark.add_measurement(Measurement::new("SuxSmall", &SuxSmallRunner));
     benchmark.benchmark(output_dir);
 }
