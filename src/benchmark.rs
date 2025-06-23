@@ -1,5 +1,8 @@
 use crate::measure::{Measurement, MeasurementResult};
 use std::io::Write;
+use std::path::Path;
+
+const NUM_ROUNDS: usize = 4;
 
 /// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
 /// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
