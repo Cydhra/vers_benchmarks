@@ -3,21 +3,23 @@
 #set page(width: auto, height: auto, margin: .5cm)
 
 // Parse CSV input data
-#let input = csv("../measurements/rank.csv")
+#let input = csv("../measurements/rank.tsv", delimiter: "\t", row-type: dictionary)
 #let lines = (:)
 #let x-val = ()
 
-#for arr in input [
-    #if (arr.at(1) not in lines) {
-        lines.insert(arr.at(1), ((), ()))
+#for arr in input {
+    let runner = arr.at("Runner")
+    if (runner not in lines) {
+        lines.insert(runner, ((), ()))
     }
-    #(lines.at(arr.at(1)).at(0).push(float(arr.at(3))))
-    #(lines.at(arr.at(1)).at(1).push((: "m": float(arr.at(4)), "p": float(arr.at(5)))))
+    lines.at(runner).at(0).push(float(arr.at("Median")))
+    lines.at(runner).at(1).push((: "m": float(arr.at("Q1")), "p": float(arr.at("Q3"))))
+    
+    if x-val.len() == 0 or x-val.last() != int(arr.at("Input Size")) {
+        x-val.push(int(arr.at("Input Size")))
+    }
+}
 
-    #if x-val.len() == 0 or x-val.last() != int(arr.at(2)) {
-        x-val.push(int(arr.at(2)))
-    }
-]
 #let slow_lines = (:)
 #slow_lines.insert("Vers", lines.at("Vers"))
 #for (name, line) in lines.pairs() {
