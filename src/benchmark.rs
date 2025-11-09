@@ -1,4 +1,5 @@
 use crate::measure::{Measurement, MeasurementResult};
+use std::io::Write;
 
 /// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
 /// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
@@ -15,24 +16,34 @@ pub(crate) struct Benchmark<'a, State, Param> {
 }
 
 impl<'a, State, Param> Benchmark<'a, State, Param> {
-
     /// Create a new benchmark with a `name` and a list of state sizes. The benchmark is repeated
     /// for all attached [`Measurements`] for each state size.
     ///
     /// [`Measurements`]: Measurement
     pub(crate) fn new(name: &str, sizes: Vec<usize>) -> Self {
-        Self { name: name.to_string(), runners: Vec::new(), sizes }
+        Self {
+            name: name.to_string(),
+            runners: Vec::new(),
+            sizes,
+        }
     }
 
     pub(crate) fn add_measurement(&mut self, runner: Measurement<'a, State, Param>) {
         self.runners.push(runner);
     }
 
-    pub(crate) fn benchmark(&mut self) {
+    pub(crate) fn benchmark<W: Write>(&mut self, output: &mut W) {
         let mut size_index = 0;
+
+        writeln!(
+            output,
+            "Benchmark\tInput Size\tRunner\tMean\tStd. Deviation\tMin\tMax\tMedian\tQ1\tQ3"
+        )
+        .expect("failed to write into output stream");
+
         // don't borrow the size vec
         while size_index < self.sizes.len() {
-            let current_size =  self.sizes[size_index];
+            let current_size = self.sizes[size_index];
 
             for runner in self.runners.iter_mut() {
                 runner.initialize_measurement(current_size);
@@ -46,9 +57,31 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
             }
 
             for runner in &self.runners {
-                let MeasurementResult { mean, std_deviation, min, max, ..} = runner.get_final_measurement();
+                let MeasurementResult {
+                    mean,
+                    std_deviation,
+                    min,
+                    max,
+                    median,
+                    q1,
+                    q3,
+                } = runner.get_final_measurement();
                 let rel_std_dev = std_deviation / mean;
-                println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_deviation, rel_std_dev * 100.0)
+                writeln!(
+                    output,
+                    "{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}",
+                    self.name,
+                    current_size,
+                    runner.name,
+                    mean,
+                    std_deviation,
+                    min,
+                    max,
+                    median,
+                    q1,
+                    q3
+                )
+                .expect("failed to write results");
             }
 
             size_index += 1;
