@@ -15,6 +15,7 @@ use sucds::bit_vectors::rank9sel::Rank9Sel as SucRank9Vec;
 use sucds::bit_vectors::{BitVector as SucBitVec, Rank, Select};
 use sux::prelude::{Block32Counters, Rank9 as Sux9, RankSmall, RankZero};
 use sux::rank_small;
+use sux::traits::BitVecOpsMut;
 
 mod common;
 
