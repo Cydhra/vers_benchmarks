@@ -53,7 +53,7 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
                 runner.estimate_timing();
             }
 
-            for _ in 0..2 {
+            for _ in 0..NUM_ROUNDS {
                 for runner in self.runners.iter_mut() {
                     runner.benchmark_chunk();
                 }
