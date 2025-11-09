@@ -2,15 +2,13 @@ use crate::runner::Runner;
 use std::time::Instant;
 
 /// The minimum time any measurement has to run to avoid noise in nanoseconds. Currently, 100 milliseconds.
-/// The benchmark repeats the measured function to reach this target time, and averages out the
-/// runtime.
 const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
 
-/// How long each chunk of the benchmark should run in nanoseconds. Currently, 5 seconds.
-const CHUNK_TIME: u64 = 5_000_000_000;
+// How long each chunk of the benchmark should run in nanoseconds. Currently, 10 seconds.
+const CHUNK_TIME: u64 = 10_000_000_000;
 
 /// A single benchmark measurement of one function.
-/// The function can be benchmarked multiple times interleaved with other benchmarks.
+/// The function can be benchmarked multiple times in interleave with other benchmarks.
 pub(crate) struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
     pub(crate) name: &'a str,
@@ -19,9 +17,28 @@ pub(crate) struct Measurement<'a, S, P> {
     size: usize,
 }
 
+/// Result of a collection of samples obtained through benchmarking. This may be any number of
+/// samples, as long as it is enough to determined median, q1, and q3.
+#[derive(Debug, Clone)]
+pub(crate) struct MeasurementResult {
+    pub mean: f64,
+    pub std_deviation: f64,
+    pub min: f64,
+    pub max: f64,
+    pub median: f64,
+    pub q1: f64,
+    pub q3: f64,
+}
+
 impl<'a, State, Param> Measurement<'a, State, Param> {
-    pub(crate) fn new(name: &'a str, func: &'a dyn Runner<Context=State, Param=Param>) -> Self {
-        Self { func, name, repetitions: 0, samples: Vec::new(), size: 0 }
+    pub(crate) fn new(name: &'a str, func: &'a dyn Runner<Context = State, Param = Param>) -> Self {
+        Self {
+            func,
+            name,
+            repetitions: 0,
+            samples: Vec::new(),
+            size: 0,
+        }
     }
 
     /// Initialize the `Measurement` with a new data structure size, and reset all previously collected
@@ -77,7 +94,9 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         let chunk_start = Instant::now();
         loop {
             let state = self.func.create_context(self.size);
-            let params = self.func.prepare_params(self.repetitions as usize, self.size);
+            let params = self
+                .func
+                .prepare_params(self.repetitions as usize, self.size);
 
             let start = Instant::now();
             for _ in 0..self.repetitions {
@@ -89,29 +108,59 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
                 break;
             }
         }
+        println!(
+            "Appending {} samples to {} benchmark",
+            samples.len(),
+            self.name
+        );
         self.samples.extend(samples);
 
-        let (mean, _, relative_std_deviation, _, _) = self.get_final_measurement();
-
-        println!("Median: {mean:.2} ns +- {:.4}%", relative_std_deviation * 100.0);
+        let MeasurementResult { mean, std_deviation, .. } = self.get_final_measurement();
+        let relative_std_deviation = std_deviation / mean * 100.0;
+        println!("Mean: {mean:.2} ns +- {relative_std_deviation:.4}%");
     }
 
     /// Get the mean, standard deviation,
-    /// relative standard deviation (i.e., standard deviation divided by median),
+    /// relative standard deviation (i.e., standard deviation divided by mean),
     /// min, and max of all samples that have been measured so far.
-    ///
-    /// The function requires a mutable reference because it sorts the measurements in-place.
-    pub(crate) fn get_final_measurement(&mut self) -> (f64, f64, f64, f64, f64) {
-        self.samples.sort_unstable();
+    pub(crate) fn get_final_measurement(&self) -> MeasurementResult {
+        assert!(self.samples.len() >= 4);
 
-        // technically not the median as defined by literature, but since this is the median of means
-        // anyway, I am not too concerned.
-        let median = self.samples[self.samples.len() / 2] as f64 / self.repetitions as f64;
-        let std_deviation = (self.samples.iter().map(|&x| ((x as f64 / self.repetitions as f64) - median).powf(2.0)).sum::<f64>() / (self.samples.len() - 1) as f64).sqrt();
-        let relative_std_deviation = std_deviation / median;
-        let min = self.samples[0] as f64 / self.repetitions as f64;
-        let max = self.samples[self.samples.len() - 1] as f64 / self.repetitions as f64;
+        let mean = (self.samples.iter().sum::<u64>() as f64 / self.samples.len() as f64)
+            / self.repetitions as f64;
+        let std_deviation = (self
+            .samples
+            .iter()
+            .map(|&x| ((x as f64 / self.repetitions as f64) - mean).powf(2.0))
+            .sum::<f64>()
+            / (self.samples.len() - 1) as f64)
+            .sqrt();
 
-        (median, std_deviation, relative_std_deviation, min, max)
+        let mut sorted_samples = self.samples.clone();
+        sorted_samples.sort();
+
+        let min = sorted_samples[0] as f64 / self.repetitions as f64;
+        let max = sorted_samples[sorted_samples.len() - 1] as f64 / self.repetitions as f64;
+
+        let median = if sorted_samples.len().is_multiple_of(2) {
+            (sorted_samples[sorted_samples.len() / 2 - 1]
+                + sorted_samples[sorted_samples.len() / 2]) as f64
+                / 2.0
+        } else {
+            sorted_samples[sorted_samples.len() / 2] as f64
+        } / self.repetitions as f64;
+
+        let q1 = sorted_samples[sorted_samples.len() / 4] as f64 / self.repetitions as f64;
+        let q3 = sorted_samples[sorted_samples.len() / 4 * 3] as f64 / self.repetitions as f64;
+
+        MeasurementResult {
+            mean,
+            std_deviation,
+            min,
+            max,
+            median,
+            q1,
+            q3,
+        }
     }
 }

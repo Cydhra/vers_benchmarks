@@ -1,9 +1,4 @@
-use crate::measure::Measurement;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::Path;
-
-const NUM_ROUNDS: usize = 3;
+use crate::measure::{Measurement, MeasurementResult};
 
 /// A benchmark is a collection of ([`Measurements`]) that are run interleaved.
 /// Each measurement defines a [`Runner`] which defines how to execute the benchmarked function.
@@ -33,37 +28,27 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         self.runners.push(runner);
     }
 
-    pub(crate) fn benchmark(&mut self, output_dir: &Path) {
+    pub(crate) fn benchmark(&mut self) {
         let mut size_index = 0;
-
-        let path = output_dir.join(Path::new(&(self.name.to_owned().to_lowercase() + ".csv")));
-        let mut file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(path)
-            .unwrap();
-
         // don't borrow the size vec
         while size_index < self.sizes.len() {
             let current_size =  self.sizes[size_index];
-            println!("Benchmarking {} elements...", current_size);
 
             for runner in self.runners.iter_mut() {
                 runner.initialize_measurement(current_size);
                 runner.estimate_timing();
             }
 
-            for i in 0..NUM_ROUNDS {
-                println!("Round {}/{NUM_ROUNDS}...", i + 1);
+            for _ in 0..2 {
                 for runner in self.runners.iter_mut() {
                     runner.benchmark_chunk();
                 }
             }
 
-            for runner in self.runners.iter_mut() {
-                let (mean, std_dev, rel_std_dev, min, max) = runner.get_final_measurement();
-                println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_dev, rel_std_dev * 100.0);
-                writeln!(file, "{},{},{},{},{},{},{}", self.name, runner.name, current_size, mean, min, max, std_dev).unwrap_or_else(|e| eprintln!("WARNING: {}", e));
+            for runner in &self.runners {
+                let MeasurementResult { mean, std_deviation, min, max, ..} = runner.get_final_measurement();
+                let rel_std_dev = std_deviation / mean;
+                println!("[{}/{}]\t{}\tMean: {:.6}\t [{:.6}-{:.6}],\t Std. Dev: {:.6} ({:.3}%)", self.name, current_size, runner.name, mean, min, max, std_deviation, rel_std_dev * 100.0)
             }
 
             size_index += 1;
