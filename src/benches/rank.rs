@@ -18,7 +18,7 @@ use sucds::bit_vectors::rank9sel::Rank9Sel as SucDsR9Vec;
 use sucds::bit_vectors::{BitVector as SucBitVec, Rank as SucdsR9Rank};
 use sux::prelude::{Block32Counters, Rank9 as SuxR9Vec, RankSmall as SuxSmallVec, RankZero};
 use sux::rank_small;
-use std::io::stdout;
+use std::io::Write;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
 
@@ -349,6 +349,5 @@ pub(crate) fn benchmark(output_dir: &Path) {
     benchmark.add_measurement(Measurement::new("SuxR9", &SuxR9Runner));
     benchmark.add_measurement(Measurement::new("SuxSmall", &SuxSmallRunner));
 
-    let mut output = stdout();
-    benchmark.benchmark(&mut output);
+    benchmark.benchmark(output);
 }

@@ -2615,6 +2615,7 @@ dependencies = [
  "bio",
  "bitm",
  "bv",
+ "clap",
  "criterion",
  "cseq",
  "elias-fano",

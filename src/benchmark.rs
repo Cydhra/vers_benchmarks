@@ -66,7 +66,6 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
                     q1,
                     q3,
                 } = runner.get_final_measurement();
-                let rel_std_dev = std_deviation / mean;
                 writeln!(
                     output,
                     "{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}\t{:.6}",
