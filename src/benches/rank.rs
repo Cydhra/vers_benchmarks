@@ -1,3 +1,4 @@
+use std::fs::OpenOptions;
 use crate::benchmark::Benchmark;
 use crate::measure::Measurement;
 use crate::runner;
@@ -19,6 +20,7 @@ use sucds::bit_vectors::{BitVector as SucBitVec, Rank as SucdsR9Rank};
 use sux::prelude::{Block32Counters, Rank9 as SuxR9Vec, RankSmall as SuxSmallVec, RankZero};
 use sux::rank_small;
 use std::io::Write;
+use sux::traits::BitVecOpsMut;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
 
@@ -349,5 +351,11 @@ pub(crate) fn benchmark(output_dir: &Path) {
     benchmark.add_measurement(Measurement::new("SuxR9", &SuxR9Runner));
     benchmark.add_measurement(Measurement::new("SuxSmall", &SuxSmallRunner));
 
-    benchmark.benchmark(output);
+    let mut output = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(output_dir.join("rank.tsv"))
+        .expect("failed to create output file for select");
+
+    benchmark.benchmark(&mut output);
 }
