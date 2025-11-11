@@ -60,7 +60,7 @@ fn elias_fano_random_access(b: &mut Criterion) {
             |b, _| {
                 b.iter_batched(
                     || sample.sample(&mut rng),
-                    |e| black_box(sucds_ef_vec.select(e)),
+                    |e| black_box(sucds_ef_vec.iter(e).next()),
                     BatchSize::SmallInput,
                 )
             },
