@@ -129,7 +129,7 @@ runner!(
     prepare_params = |number, len| { create_params(number, len) },
     execute = |ef: EfState, idx: usize| {
         if let EliasFano(ef) = ef {
-            black_box(ef.try_borrow_mut().unwrap().visit(*idx as u64).unwrap());
+            black_box(ef.borrow_mut().visit(*idx as u64).unwrap());
         } else {
             panic!("Invalid state");
         }
