@@ -112,13 +112,18 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
                 .func
                 .prepare_params(self.repetitions, self.size);
 
+            // warmup
+            let warmup_reps = params.len() / 100;
+            self.run_target_function(&state, &params[..warmup_reps]);
+
+            // measure one sample
             let start = Instant::now();
             self.run_target_function(&state, &params);
             let time_sample = start.elapsed().as_nanos();
             samples.push(time_sample as u64);
+
+            // check if chunk time has been reached
             total_sample_time += time_sample;
-
-
             if total_sample_time > CHUNK_TIME as u128 {
                 break;
             }
