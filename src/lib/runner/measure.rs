@@ -12,7 +12,7 @@ const CHUNK_TIME: u64 = 10_000_000_000;
 pub struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
     pub(crate) name: &'a str,
-    repetitions: u64,
+    repetitions: usize,
     samples: Vec<u64>,
     size: usize,
 }
@@ -55,6 +55,13 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         self.func.create_context(self.size)
     }
 
+    #[inline(always)]
+    fn run_target_function(&self, state: &State, params: &[Param]) {
+        for param in params {
+            self.func.execute(state, param);
+        }
+    }
+
     pub(crate) fn estimate_timing(&mut self) {
         if self.size == 0 {
             eprintln!("Please call initialize_measurement(size) before starting timing.");
@@ -69,9 +76,7 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
             let params = self.func.prepare_params(repetitions as usize, self.size);
 
             let start = Instant::now();
-            for _ in 0..repetitions {
-                self.func.execute(&state, &params[0]);
-            }
+            self.run_target_function(&state, &params);
             timing = start.elapsed().as_nanos();
 
             if timing > MINIMUM_RUNNING_TIME as u128 {
@@ -83,9 +88,13 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
 
         let time_per_call = timing as f64 / repetitions as f64;
         let reps_per_measurement = (MINIMUM_RUNNING_TIME as f64 / time_per_call).ceil() as u64;
+        if reps_per_measurement > usize::MAX as u64 {
+            panic!("cannot handle more than usize::MAX repetitions in benchmark");
+        }
+
         println!("{} requires approx. {time_per_call:.2} ns per call and thus we run {reps_per_measurement} repetitions per measurement", self.name);
 
-        self.repetitions = reps_per_measurement;
+        self.repetitions = reps_per_measurement as usize;
     }
 
     pub(crate) fn benchmark_chunk(&mut self) {
@@ -101,12 +110,10 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
             let state = self.func.create_context(self.size);
             let params = self
                 .func
-                .prepare_params(self.repetitions as usize, self.size);
+                .prepare_params(self.repetitions, self.size);
 
             let start = Instant::now();
-            for _ in 0..self.repetitions {
-                self.func.execute(&state, &params[0]);
-            }
+            self.run_target_function(&state, &params);
             samples.push(start.elapsed().as_nanos() as u64);
 
             if chunk_start.elapsed().as_nanos() > CHUNK_TIME as u128 {
