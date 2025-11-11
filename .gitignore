@@ -1,5 +1,6 @@
 /target
 /measurements
+/plots/plots
 
 /.idea
 **.iml
