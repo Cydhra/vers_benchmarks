@@ -23,7 +23,7 @@
 #let slow_lines = (:)
 #slow_lines.insert("Vers", lines.at("Vers"))
 #for (name, line) in lines.pairs() {
-    if calc.max(..line.at(0)) > 5.0 {
+    if calc.max(..line.at(0)) > 20.0 {
         slow_lines.insert(name, lines.remove(name))
     }
 }
