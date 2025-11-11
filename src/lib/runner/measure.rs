@@ -4,8 +4,8 @@ use std::time::Instant;
 /// The minimum time any measurement has to run to avoid noise in nanoseconds. Currently, 100 milliseconds.
 const MINIMUM_RUNNING_TIME: u64 = 100_000_000;
 
-// How long each chunk of the benchmark should run in nanoseconds. Currently, 10 seconds.
-const CHUNK_TIME: u64 = 10_000_000_000;
+// How long each chunk of the benchmark should run in nanoseconds. Currently, 1 second.
+const CHUNK_TIME: u64 = 1_000_000_000;
 
 /// A single benchmark measurement of one function.
 /// The function can be benchmarked multiple times in interleave with other benchmarks.
@@ -105,7 +105,7 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         let mut samples = Vec::with_capacity(CHUNK_TIME as usize / MINIMUM_RUNNING_TIME as usize);
 
         println!("Measuring chunk for {}", self.name);
-        let chunk_start = Instant::now();
+        let mut total_sample_time = 0;
         loop {
             let state = self.func.create_context(self.size);
             let params = self
@@ -114,9 +114,12 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
 
             let start = Instant::now();
             self.run_target_function(&state, &params);
-            samples.push(start.elapsed().as_nanos() as u64);
+            let time_sample = start.elapsed().as_nanos();
+            samples.push(time_sample as u64);
+            total_sample_time += time_sample;
 
-            if chunk_start.elapsed().as_nanos() > CHUNK_TIME as u128 {
+
+            if total_sample_time > CHUNK_TIME as u128 {
                 break;
             }
         }
