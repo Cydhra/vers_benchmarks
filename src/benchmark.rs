@@ -1,6 +1,6 @@
 use crate::measure::{Measurement, MeasurementResult};
 use std::io::Write;
-use std::path::Path;
+use std::ops::Range;
 
 const NUM_ROUNDS: usize = 4;
 
@@ -29,6 +29,15 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
             runners: Vec::new(),
             sizes,
         }
+    }
+
+    /// Create a new benchmark with a `name` and a range of input size given as logarithms.
+    /// The benchmark is repeated for all attached [`Measurements`] with a state size of
+    /// `2^i` for each size `i` in the given `size_range`
+    ///
+    /// [`Measurements`]: Measurement
+    pub(crate) fn from_powers(name: &str, size_range: Range<usize>) -> Self {
+        Self::new(name, size_range.into_iter().collect())
     }
 
     pub(crate) fn add_measurement(&mut self, runner: Measurement<'a, State, Param>) {
