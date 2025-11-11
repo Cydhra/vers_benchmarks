@@ -142,7 +142,7 @@ pub fn create_benchmark() -> Benchmark::<'static, EfState, usize> {
     benchmark.add_measurement(Measurement::new("SDS", &SDSRunner));
     benchmark.add_measurement(Measurement::new("sux", &SuxRunner));
     benchmark.add_measurement(Measurement::new("cseq", &CseqRunner));
-    benchmark.add_measurement(Measurement::new("elias-fano", &EliasFanoRunner));
+    benchmark.add_measurement(Measurement::new("eliasfano", &EliasFanoRunner));
 
     benchmark
 }
