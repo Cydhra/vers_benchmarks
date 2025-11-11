@@ -1,3 +1,4 @@
+use std::io::{stdout, Write};
 use crate::runner::Runner;
 use std::time::Instant;
 
@@ -104,7 +105,9 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         }
         let mut samples = Vec::with_capacity(CHUNK_TIME as usize / MINIMUM_RUNNING_TIME as usize);
 
-        println!("Measuring chunk for {}", self.name);
+        print!("Measuring chunk for {}...", self.name);
+        let _ = stdout().flush();
+
         let mut total_sample_time = 0;
         loop {
             let state = self.func.create_context(self.size);
@@ -128,8 +131,8 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
                 break;
             }
         }
-        println!(
-            "Appending {} samples to {} benchmark",
+        print!(
+            "\rMeasured {} samples for {}: ",
             samples.len(),
             self.name
         );
