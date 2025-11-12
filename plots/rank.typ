@@ -1,10 +1,11 @@
 #import "@preview/lilaq:0.3.0" as lq
 #import "processing.typ": read_line_data
+#import "drawing.typ": line_plot
 
 #set page(width: auto, height: auto, margin: .5cm)
 
 #let input = csv("../measurements/rank.tsv", delimiter: "\t", row-type: dictionary)
-#let (x-val, lines) = read_line_data(input)
+#let (x_values, lines) = read_line_data(input)
 
 #let slow_lines = (:)
 #slow_lines.insert("Vers", lines.at("Vers"))
@@ -18,23 +19,6 @@
 #set lq.mark(align: lq.marks.a3)
 
 #for (title, dict) in (: "Rank (Slowest)": slow_lines, "Rank (Fastest)": lines).pairs() {
-    lq.diagram(
-        title: title,
-        xlabel: "Elements",
-        ylabel: "Time (ns)",
-        xscale: "log",
-        cycle: lq.color.map.petroff8,
-        ylim: (0, auto),
-
-        ..for (name, line) in dict.pairs() {
-            (lq.plot(
-                x-val,
-                line,
-                color: auto,
-                label: name,
-                stroke: (thickness: 2pt)
-            ),)
-        }
-    )
+    line_plot(title, x_values, dict)
     pagebreak()
 }
