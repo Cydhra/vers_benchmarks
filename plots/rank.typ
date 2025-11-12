@@ -9,7 +9,7 @@
 #let slow_lines = (:)
 #slow_lines.insert("Vers", lines.at("Vers"))
 #for (name, line) in lines.pairs() {
-    if calc.max(..line.at(0)) > 20.0 {
+    if calc.max(..line) > 20.0 {
         slow_lines.insert(name, lines.remove(name))
     }
 }
@@ -29,7 +29,7 @@
         ..for (name, line) in dict.pairs() {
             (lq.plot(
                 x-val,
-                line.at(0),
+                line,
                 color: auto,
                 label: name,
                 stroke: (thickness: 2pt)
