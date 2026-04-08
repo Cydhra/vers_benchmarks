@@ -1,8 +1,8 @@
-use std::hint::black_box;
 use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId};
 use qwt::{AccessUnsigned, RankUnsigned};
-use rand::distributions::{Standard, Uniform, Distribution};
+use rand::distributions::{Distribution, Standard, Uniform};
 use rand::{thread_rng, Rng};
+use std::hint::black_box;
 
 mod common;
 
@@ -34,7 +34,14 @@ fn bench_access(c: &mut criterion::Criterion) {
         }
         let wav_wavelet = wav_wavelet.build();
 
-        let qwt_wavelet = qwt::QWT512::from_iter(sequence.iter().flat_map(|&e| [e & 0xFFFF, (e >> 16) & 0xFFFF, (e >> 32) & 0xFFFF, (e >> 48) & 0xFFFF]));
+        let qwt_wavelet = qwt::QWT512::from_iter(sequence.iter().flat_map(|&e| {
+            [
+                e & 0xFFFF,
+                (e >> 16) & 0xFFFF,
+                (e >> 32) & 0xFFFF,
+                (e >> 48) & 0xFFFF,
+            ]
+        }));
 
         drop(sequence);
 
@@ -102,7 +109,14 @@ fn bench_rank(c: &mut criterion::Criterion) {
         }
         let wav_wavelet = wav_wavelet.build();
 
-        let qwt_wavelet = qwt::QWT512::from_iter(sequence.iter().flat_map(|&e| [e & 0xFFFF, (e >> 16) & 0xFFFF, (e >> 32) & 0xFFFF, (e >> 48) & 0xFFFF]));
+        let qwt_wavelet = qwt::QWT512::from_iter(sequence.iter().flat_map(|&e| {
+            [
+                e & 0xFFFF,
+                (e >> 16) & 0xFFFF,
+                (e >> 32) & 0xFFFF,
+                (e >> 48) & 0xFFFF,
+            ]
+        }));
 
         drop(sequence);
 

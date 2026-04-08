@@ -14,8 +14,8 @@ use sux::bits::BitVec;
 use sux::dict::{EliasFano, EliasFanoBuilder as SuxEliasBuilder};
 use sux::rank_sel::SelectAdaptConst;
 use sux::traits::IndexedSeq;
-use sux::traits::Unaligned;
 use sux::traits::TryIntoUnaligned;
+use sux::traits::Unaligned;
 
 type SuxEliasSeq = Unaligned<EliasFano<usize, SelectAdaptConst<BitVec<Box<[usize]>>>>>;
 use vers_vecs::EliasFanoVec;

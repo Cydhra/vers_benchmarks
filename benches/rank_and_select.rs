@@ -13,9 +13,11 @@ use succinct::{BinSearchSelect, BitRankSupport, BitVecPush, BitVector as Succinc
 use sucds::bit_vectors::darray::DArray as SucDArray;
 use sucds::bit_vectors::rank9sel::Rank9Sel as SucRank9Vec;
 use sucds::bit_vectors::{BitVector as SucBitVec, Rank, Select};
-use sux::prelude::{Block32Counters, Rank9 as Sux9, RankSmall, RankZero};
+use sux::bits::BitVec as SuxBitVec;
+use sux::prelude::{Block32Counters, Rank9 as Sux9, RankSmall, RankZero, SelectAdapt};
 use sux::rank_small;
-use sux::traits::BitVecOpsMut;
+use sux::traits::AddNumBits;
+use sux::traits::{rank_sel::Select as SuxSelect, BitVecOpsMut};
 
 mod common;
 
@@ -98,6 +100,19 @@ fn construct_sucds_darray(rng: &mut ThreadRng, len: usize) -> SucDArray {
     SucDArray::from_bits(suc_bv.iter()).enable_rank()
 }
 
+fn construct_sux_select_adapt(
+    rng: &mut ThreadRng,
+    len: usize,
+) -> SelectAdapt<AddNumBits<SuxBitVec<Vec<usize>>>> {
+    let mut sux_bv = SuxBitVec::new(len);
+    for i in 0..len / 64 {
+        sux_bv.as_mut()[i] = rng.sample(Standard);
+    }
+    let sux_bv: AddNumBits<_> = sux_bv.into();
+
+    SelectAdapt::new(sux_bv)
+}
+
 fn construct_bitm_vec(rng: &mut ThreadRng, len: usize) -> RankSelect101111<CombinedSampling> {
     let mut bv = Box::<[u64]>::with_zeroed_bits(len);
     for i in 0..len {
@@ -120,7 +135,10 @@ fn construct_sux_rank9(rng: &mut ThreadRng, len: usize) -> Sux9 {
     Sux9::new(bit_vec)
 }
 
-fn construct_sux_small(rng: &mut ThreadRng, len: usize) -> RankSmall<64, 1, 10, sux::bits::BitVec, Box<[u64]>, Box<[Block32Counters<1, 10>]>> {
+fn construct_sux_small(
+    rng: &mut ThreadRng,
+    len: usize,
+) -> RankSmall<64, 1, 10, sux::bits::BitVec, Box<[u64]>, Box<[Block32Counters<1, 10>]>> {
     let mut bit_vec = sux::prelude::BitVec::new(len);
     for i in 0..len {
         if rng.gen_bool(0.5) {
@@ -268,22 +286,27 @@ fn compare_selects(b: &mut Criterion) {
         let rank9_vec = construct_rank9_select_vec(&mut rng, l);
         let sucds_vec = construct_sucds_vec(&mut rng, l);
         let sucds_darray = construct_sucds_darray(&mut rng, l);
+        let sux_select_adapt = construct_sux_select_adapt(&mut rng, l);
         let bitm_vec = construct_bitm_vec(&mut rng, l);
 
-        let sample = Uniform::new(0,
-                                  [
-                                      vers_vec.rank0(l),
-                                      rsdict.rank(l as u64 - 1, false) as usize,
-                                      bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
-                                      fair_bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
-                                      fid_vec.rank0(l as u64) as usize,
-                                      ind_bit_vec.rank_zeros(l as u64 - 1).unwrap() as usize,
-                                      rank9_vec.rank0(l as u64 - 1) as usize,
-                                      sucds_vec.rank0(l).unwrap(),
-                                      sucds_darray.rank0(l).unwrap(),
-                                      bitm_vec.rank0(l - 1),
-                                  ].iter().min().unwrap_or(&0));
-
+        let sample = Uniform::new(
+            0,
+            [
+                vers_vec.rank0(l),
+                rsdict.rank(l as u64 - 1, false) as usize,
+                bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                fair_bio_vec.rank_0(l as u64 - 1).unwrap() as usize,
+                fid_vec.rank0(l as u64) as usize,
+                ind_bit_vec.rank_zeros(l as u64 - 1).unwrap() as usize,
+                rank9_vec.rank0(l as u64 - 1) as usize,
+                sucds_vec.rank0(l).unwrap(),
+                sucds_darray.rank0(l).unwrap(),
+                bitm_vec.rank0(l - 1),
+            ]
+            .iter()
+            .min()
+            .unwrap_or(&0),
+        );
 
         group.bench_with_input(BenchmarkId::new("vers", l), &l, |b, _| {
             b.iter_batched(
@@ -353,6 +376,14 @@ fn compare_selects(b: &mut Criterion) {
             b.iter_batched(
                 || sample.sample(&mut rng),
                 |e| black_box(sucds_darray.select1(e)),
+                BatchSize::SmallInput,
+            )
+        });
+
+        group.bench_with_input(BenchmarkId::new("sux-select-adapt", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sux_select_adapt.select(e)),
                 BatchSize::SmallInput,
             )
         });
