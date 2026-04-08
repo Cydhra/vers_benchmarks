@@ -120,7 +120,7 @@ fn construct_sux_rank9(rng: &mut ThreadRng, len: usize) -> Sux9 {
     Sux9::new(bit_vec)
 }
 
-fn construct_sux_small(rng: &mut ThreadRng, len: usize) -> RankSmall<1, 10, sux::bits::BitVec, Box<[usize]>, Box<[Block32Counters<1, 10>]>> {
+fn construct_sux_small(rng: &mut ThreadRng, len: usize) -> RankSmall<64, 1, 10, sux::bits::BitVec, Box<[u64]>, Box<[Block32Counters<1, 10>]>> {
     let mut bit_vec = sux::prelude::BitVec::new(len);
     for i in 0..len {
         if rng.gen_bool(0.5) {

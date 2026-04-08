@@ -9,7 +9,7 @@ rand = { version = "0.8", features = ["alloc"] }
 plotters = "0.3.5"
 
 # vers
-vers-vecs = { path = "vers", features = ["simd"] }
+vers-vecs = { version = "1.9.0", features = ["simd"] }
 
 # comparison benchmarks libraries
 #rsdict = { version = "0.0.8", features = ["simd"] }
@@ -27,7 +27,7 @@ bitm = "0.5.1"
 cseq = "0.1"
 wavelet-matrix = "0.4"
 qwt = "0.3.1"
-sux = "0.9.1"
+sux = { path = "../sux-rs" }
 
 [[bench]]
 name = "rank_and_select"

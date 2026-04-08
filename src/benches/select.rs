@@ -32,7 +32,7 @@ pub(crate) enum BitVecState {
     SucDsDA(SucDsDVec),
     Bitm(BitmVec<CombinedSampling, CombinedSampling>),
     SuxR9(SuxR9Select<AddNumBits<SuxVec>>),
-    SuxSmall(SuxR9Select<AddNumBits<SuxSmallVec<1, 10, sux::bits::BitVec, Box<[usize]>, Box<[Block32Counters<1, 10>]>>>>),
+    SuxSmall(SuxR9Select<AddNumBits<SuxSmallVec<64, 1, 10, sux::bits::BitVec, Box<[u64]>, Box<[Block32Counters<1, 10>]>>>>),
 }
 
 fn create_params(number: usize, len: usize) -> Box<[u64]> {
@@ -245,7 +245,7 @@ runner!(
             }
         }
 
-        SuxR9(SuxR9Select::new(bit_vec.into(), 4))
+        SuxR9(SuxR9Select::new(bit_vec.into()))
     },
     prepare_params = |number, len| {
         create_params(number, len)
@@ -272,7 +272,7 @@ runner!(
 
         let rank_support = rank_small![2; bit_vec];
 
-        SuxSmall(SuxR9Select::new(rank_support.into(), 4))
+        SuxSmall(SuxR9Select::new(rank_support.into()))
     },
     prepare_params = |number, len| {
         create_params(number, len)

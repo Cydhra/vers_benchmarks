@@ -2,6 +2,9 @@ use criterion::{black_box, criterion_group, criterion_main, BatchSize, Benchmark
 use rand::distributions::{Distribution, Uniform};
 use rand::{thread_rng, Rng};
 use sucds::mii_sequences::EliasFanoBuilder;
+use sux::dict::EliasFanoBuilder as SuxEliasBuilder;
+use sux::traits::Pred;
+use sux::traits::TryIntoUnaligned;
 use vers_vecs::EliasFanoVec;
 
 mod common;
@@ -58,6 +61,19 @@ fn bench_ef_adversarial(b: &mut Criterion) {
         });
         drop(sucds_ef_vec);
 
+        let universe = *sequence.last().unwrap() + 1;
+        let mut sux_builder = SuxEliasBuilder::new(sequence.len(), universe as usize);
+        sux_builder.extend(sequence.iter().map(|e| *e as usize));
+        let sux_ef_vec = sux_builder.build_with_dict().try_into_unaligned().unwrap();
+        group.bench_with_input(BenchmarkId::new("sux", l), &l, |b, _| {
+            b.iter_batched(
+                || sequence[query_distribution.sample(&mut rng)],
+                |e| black_box(sux_ef_vec.pred(&(e as usize))),
+                BatchSize::SmallInput,
+            )
+        });
+        drop(sux_ef_vec);
+
         group.bench_with_input(BenchmarkId::new("binary search", l), &l, |b, _| {
             b.iter_batched(
                 || sequence[query_distribution.sample(&mut rng)],
@@ -113,6 +129,19 @@ fn bench_ef_predecessor(b: &mut Criterion) {
             )
         });
         drop(sucds_ef_vec);
+
+        let universe = *sequence.last().unwrap() + 1;
+        let mut sux_builder = SuxEliasBuilder::new(sequence.len(), universe as usize);
+        sux_builder.extend(sequence.iter().map(|e| *e as usize));
+        let sux_ef_vec = sux_builder.build_with_dict().try_into_unaligned().unwrap();
+        group.bench_with_input(BenchmarkId::new("sux", l), &l, |b, _| {
+            b.iter_batched(
+                || sequence[query_distribution.sample(&mut rng)],
+                |e| black_box(sux_ef_vec.pred(&(e as usize))),
+                BatchSize::SmallInput,
+            )
+        });
+        drop(sux_ef_vec);
 
         group.bench_with_input(BenchmarkId::new("binary search", l), &l, |b, _| {
             b.iter_batched(
