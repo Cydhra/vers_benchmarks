@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
 rand = { version = "0.8", features = ["alloc"] }
-plotters = "0.3.5"
+#plotters = "0.3.5"
 
 # vers
 vers-vecs = { path = "vers", features = ["simd"] }
@@ -29,8 +29,15 @@ wavelet-matrix = "0.4"
 qwt = "0.3.1"
 sux = "0.14.0"
 
+# instrumentation for allocator for memory benchmarking
+stats_alloc = "0.1.10"
+stats_alloc_helper = "0.3.1"
+
 [[bin]]
 name = "time"
+
+[[bin]]
+name = "memory"
 
 [lib]
 name = "runner"
