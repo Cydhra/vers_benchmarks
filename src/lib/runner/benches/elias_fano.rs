@@ -23,7 +23,7 @@ use EfState::*;
 
 const UNIVERSE_SIZE: u64 = 4_000_000_000u64;
 
-pub(crate) enum EfState {
+pub enum EfState {
     Vers(EliasFanoVec),
     EliasFano(RefCell<EfEliasSeq>),
     CseqEliasFano(CseqEliasSeq),
@@ -136,13 +136,19 @@ runner!(
     }
 );
 
-pub fn benchmark(output_dir: &Path) {
+pub fn create_benchmark() -> Benchmark::<'static, EfState, usize> {
     let mut benchmark = Benchmark::<EfState, _>::from_powers("Elias Fano Random Access", 7..24);
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("SDS", &SDSRunner));
     benchmark.add_measurement(Measurement::new("sux", &SuxRunner));
     benchmark.add_measurement(Measurement::new("cseq", &CseqRunner));
     benchmark.add_measurement(Measurement::new("elias-fano", &EliasFanoRunner));
+
+    benchmark
+}
+
+pub fn benchmark(output_dir: &Path) {
+    let mut benchmark = create_benchmark();
 
     let mut output = OpenOptions::new()
         .create(true)

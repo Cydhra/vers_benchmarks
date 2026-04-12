@@ -25,7 +25,7 @@ use sux::traits::BitVecOpsMut;
 use vers_vecs::{BitVec, RsVec};
 use BitVecState::*;
 
-pub(crate) enum BitVecState {
+pub enum BitVecState {
     Vers(RsVec),
     RsD(RsDict),
     Bio(BioRsVec),
@@ -286,7 +286,7 @@ runner!(
     }
 );
 
-pub fn benchmark(output_dir: &Path) {
+pub fn create_benchmark() -> Benchmark<'static, BitVecState, u64> {
     let mut benchmark = Benchmark::<BitVecState, u64>::from_powers("Select", 7..32);
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("RsDict", &RsDictRunner));
@@ -298,6 +298,12 @@ pub fn benchmark(output_dir: &Path) {
     benchmark.add_measurement(Measurement::new("Bitm", &BitmRunner));
     benchmark.add_measurement(Measurement::new("SuxR9", &SuxR9Runner));
     benchmark.add_measurement(Measurement::new("SuxSmall", &SuxSmallRunner));
+
+    benchmark
+}
+
+pub fn benchmark(output_dir: &Path) {
+    let mut benchmark = create_benchmark();
 
     let mut output = OpenOptions::new()
         .create(true)

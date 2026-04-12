@@ -12,7 +12,7 @@ const NUM_ROUNDS: usize = 4;
 ///
 /// [`Measurements`]: Measurement
 /// [`Runner`]: crate::runner::Runner
-pub(crate) struct Benchmark<'a, State, Param> {
+pub struct Benchmark<'a, State, Param> {
     name: String,
     runners: Vec<Measurement<'a, State, Param>>,
     sizes: Vec<usize>,
@@ -23,7 +23,7 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
     /// for all attached [`Measurements`] for each state size.
     ///
     /// [`Measurements`]: Measurement
-    pub(crate) fn new(name: &str, sizes: Vec<usize>) -> Self {
+    pub fn new(name: &str, sizes: Vec<usize>) -> Self {
         Self {
             name: name.to_string(),
             runners: Vec::new(),
@@ -36,15 +36,15 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
     /// `2^i` for each size `i` in the given `size_range`
     ///
     /// [`Measurements`]: Measurement
-    pub(crate) fn from_powers(name: &str, size_range: Range<usize>) -> Self {
+    pub fn from_powers(name: &str, size_range: Range<usize>) -> Self {
         Self::new(name, size_range.into_iter().map(|p| 1 << p).collect())
     }
 
-    pub(crate) fn add_measurement(&mut self, runner: Measurement<'a, State, Param>) {
+    pub fn add_measurement(&mut self, runner: Measurement<'a, State, Param>) {
         self.runners.push(runner);
     }
 
-    pub(crate) fn benchmark<W: Write>(&mut self, output: &mut W) {
+    pub fn benchmark<W: Write>(&mut self, output: &mut W) {
         let mut size_index = 0;
 
         writeln!(
