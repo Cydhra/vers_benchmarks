@@ -44,12 +44,12 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         self.runners.push(runner);
     }
 
-    pub fn sizes(&self) -> impl Iterator<Item=usize> {
-        self.sizes.iter()
+    pub fn sizes(&self) -> impl Iterator<Item=usize> + use<'_, State, Param> {
+        self.sizes.iter().copied()
     }
 
-    pub fn runners(&self) -> impl Iterator<Item=&'_ Measurement<'a, State, Param>> {
-        self.runners.iter()
+    pub fn runners(&mut self) -> impl Iterator<Item=&'_ mut Measurement<'a, State, Param>> {
+        self.runners.iter_mut()
     }
 
     pub fn benchmark<W: Write>(&mut self, output: &mut W) {

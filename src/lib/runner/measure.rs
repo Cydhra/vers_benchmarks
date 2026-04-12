@@ -1,4 +1,3 @@
-use std::task::Context;
 use crate::runner::Runner;
 use std::time::Instant;
 
@@ -172,5 +171,9 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
             q1,
             q3,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.name
     }
 }
