@@ -37,7 +37,7 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
     ///
     /// [`Measurements`]: Measurement
     pub(crate) fn from_powers(name: &str, size_range: Range<usize>) -> Self {
-        Self::new(name, size_range.into_iter().collect())
+        Self::new(name, size_range.into_iter().map(|p| 1 << p).collect())
     }
 
     pub(crate) fn add_measurement(&mut self, runner: Measurement<'a, State, Param>) {
