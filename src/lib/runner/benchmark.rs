@@ -44,6 +44,10 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         self.runners.push(runner);
     }
 
+    pub fn sizes(&self) -> impl Iterator<Item=usize> {
+        self.sizes.iter()
+    }
+
     pub fn runners(&self) -> impl Iterator<Item=&'_ Measurement<'a, State, Param>> {
         self.runners.iter()
     }

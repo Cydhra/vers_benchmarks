@@ -1,3 +1,4 @@
+use std::task::Context;
 use crate::runner::Runner;
 use std::time::Instant;
 
@@ -44,10 +45,15 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
     /// Initialize the `Measurement` with a new data structure size, and reset all previously collected
     /// measurements.
     /// A call to [`estimate_timing`] is necessary before [`benchmark`] can be called again.
-    pub(crate) fn initialize_measurement(&mut self, size: usize) {
+    pub fn initialize_measurement(&mut self, size: usize) {
         self.samples.clear();
         self.size = size;
         self.repetitions = 0;
+    }
+
+    #[inline]
+    pub fn create_state(&self) -> State {
+        self.func.create_context(self.size)
     }
 
     pub(crate) fn estimate_timing(&mut self) {
@@ -60,7 +66,7 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         let mut repetitions = 1;
 
         loop {
-            let state = self.func.create_context(self.size);
+            let state = self.create_state();
             let params = self.func.prepare_params(repetitions as usize, self.size);
 
             let start = Instant::now();
