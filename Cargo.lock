@@ -2672,9 +2672,7 @@ dependencies = [
 
 [[package]]
 name = "vers-vecs"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b66e46969ff15737f785d27c9a5a4b96ff3aa7913ec4f438f123533dc97cb54"
+version = "1.8.2"
 
 [[package]]
 name = "vers_benchmarks"
