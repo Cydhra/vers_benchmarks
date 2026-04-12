@@ -9,7 +9,7 @@ const CHUNK_TIME: u64 = 10_000_000_000;
 
 /// A single benchmark measurement of one function.
 /// The function can be benchmarked multiple times in interleave with other benchmarks.
-pub(crate) struct Measurement<'a, S, P> {
+pub struct Measurement<'a, S, P> {
     func: &'a dyn Runner<Context = S, Param = P>,
     pub(crate) name: &'a str,
     repetitions: u64,

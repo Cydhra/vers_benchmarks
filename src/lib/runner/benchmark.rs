@@ -44,6 +44,10 @@ impl<'a, State, Param> Benchmark<'a, State, Param> {
         self.runners.push(runner);
     }
 
+    pub fn runners(&self) -> impl Iterator<Item=&'_ Measurement<'a, State, Param>> {
+        self.runners.iter()
+    }
+
     pub fn benchmark<W: Write>(&mut self, output: &mut W) {
         let mut size_index = 0;
 
