@@ -29,6 +29,13 @@ wavelet-matrix = "0.4"
 qwt = "0.3.1"
 sux = "0.14.0"
 
+[[bin]]
+name = "time"
+
+[lib]
+name = "runner"
+path = "src/lib/runner/lib.rs"
+
 [[bench]]
 name = "rank_and_select"
 harness = false

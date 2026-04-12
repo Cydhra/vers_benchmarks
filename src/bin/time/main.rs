@@ -1,12 +1,9 @@
-use crate::benches::*;
+use runner::benches::*;
 use std::fs;
 use std::path::Path;
 use std::process::exit;
 
-mod benches;
-mod benchmark;
-mod measure;
-mod runner;
+
 
 const MEASUREMENTS_DIR: &str = "./measurements";
 

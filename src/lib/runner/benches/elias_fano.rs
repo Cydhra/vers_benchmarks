@@ -136,7 +136,7 @@ runner!(
     }
 );
 
-pub(crate) fn benchmark(output_dir: &Path) {
+pub fn benchmark(output_dir: &Path) {
     let mut benchmark = Benchmark::<EfState, _>::from_powers("Elias Fano Random Access", 7..24);
     benchmark.add_measurement(Measurement::new("Vers", &VersRunner));
     benchmark.add_measurement(Measurement::new("SDS", &SDSRunner));
