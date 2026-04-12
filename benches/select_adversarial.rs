@@ -27,11 +27,9 @@ fn bench_ef(b: &mut Criterion) {
         bit_vec.append_word(2);
         let bit_vec = RsVec::from_bit_vec(bit_vec);
 
-        group.bench_with_input(
-            BenchmarkId::new("vers", length),
-            &length,
-            |b, _| b.iter(|| black_box(bit_vec.select1((1 << 13) - 1))),
-        );
+        group.bench_with_input(BenchmarkId::new("vers", length), &length, |b, _| {
+            b.iter(|| black_box(bit_vec.select1((1 << 13) - 1)))
+        });
         drop(bit_vec);
 
         let mut rs_dict = RsDict::with_capacity(length / 64);
@@ -48,11 +46,9 @@ fn bench_ef(b: &mut Criterion) {
         rs_dict.push(false);
         rs_dict.push(false);
 
-        group.bench_with_input(
-            BenchmarkId::new("rsdict", length),
-            &length,
-            |b, _| b.iter(|| black_box(rs_dict.select1((1 << 13) - 1))),
-        );
+        group.bench_with_input(BenchmarkId::new("rsdict", length), &length, |b, _| {
+            b.iter(|| black_box(rs_dict.select1((1 << 13) - 1)))
+        });
         drop(rs_dict);
 
         // the following benchmark does not trigger the worst-case for sucd reliably,

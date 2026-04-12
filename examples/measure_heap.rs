@@ -5,7 +5,7 @@
 
 use crate::Measure::*;
 use plotters::prelude::*;
-use plotters::style::full_palette::{ORANGE, PURPLE, GREEN_800};
+use plotters::style::full_palette::{GREEN_800, ORANGE, PURPLE};
 use rand::distributions::{Standard, Uniform};
 use rand::prelude::{Distribution, ThreadRng};
 use rand::{thread_rng, Rng};

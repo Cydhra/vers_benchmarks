@@ -115,7 +115,11 @@ impl<'a, State, Param> Measurement<'a, State, Param> {
         );
         self.samples.extend(samples);
 
-        let MeasurementResult { mean, std_deviation, .. } = self.get_final_measurement();
+        let MeasurementResult {
+            mean,
+            std_deviation,
+            ..
+        } = self.get_final_measurement();
         let relative_std_deviation = std_deviation / mean * 100.0;
         println!("Mean: {mean:.2} ns +- {relative_std_deviation:.4}%");
     }

@@ -27,7 +27,7 @@ bitm = "0.5.1"
 cseq = "0.1"
 wavelet-matrix = "0.4"
 qwt = "0.3.1"
-sux = "0.9.1"
+sux = "0.14.0"
 
 [[bench]]
 name = "rank_and_select"

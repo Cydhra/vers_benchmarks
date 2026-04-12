@@ -1,11 +1,14 @@
 use std::time::{Duration, Instant};
 
-use criterion::{BatchSize, BenchmarkId, black_box, Criterion, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
 use cseq::elias_fano::Builder;
 use elias_fano::EliasFano;
-use rand::{Rng, thread_rng};
 use rand::distributions::{Distribution, Standard, Uniform};
+use rand::{thread_rng, Rng};
 use sucds::mii_sequences::EliasFanoBuilder;
+use sux::dict::EliasFanoBuilder as SuxEliasBuilder;
+use sux::traits::IndexedSeq;
+use sux::traits::TryIntoUnaligned;
 use vers_vecs::EliasFanoVec;
 
 mod common;
@@ -67,23 +70,31 @@ fn elias_fano_random_access(b: &mut Criterion) {
         );
         drop(sucds_ef_vec);
 
+        let universe = *sequence.last().unwrap() + 1;
+        let mut sux_builder = SuxEliasBuilder::new(sequence.len(), universe as usize);
+        sux_builder.extend(sequence.iter().map(|e| *e as usize));
+        let sux_ef_vec = sux_builder.build_with_seq().try_into_unaligned().unwrap();
+        group.bench_with_input(BenchmarkId::new("sux elias fano vector", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(sux_ef_vec.get(e)),
+                BatchSize::SmallInput,
+            )
+        });
+        drop(sux_ef_vec);
+
         let mut cseq_ef_vec = Builder::new(l, *sequence.last().unwrap() + 1);
         cseq_ef_vec.push_all(sequence.iter().copied());
         let cseq_ef_vec = cseq_ef_vec.finish();
 
-        group.bench_with_input(
-            BenchmarkId::new("cseq elias fano vector", l),
-            &l,
-            |b, _| {
-                b.iter_batched(
-                    || sample.sample(&mut rng),
-                    |e| black_box(cseq_ef_vec.get(e)),
-                    BatchSize::SmallInput,
-                )
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("cseq elias fano vector", l), &l, |b, _| {
+            b.iter_batched(
+                || sample.sample(&mut rng),
+                |e| black_box(cseq_ef_vec.get(e)),
+                BatchSize::SmallInput,
+            )
+        });
         drop(cseq_ef_vec);
-
     }
     group.finish();
 }
@@ -180,32 +191,52 @@ fn elias_fano_in_order(b: &mut Criterion) {
         );
         drop(sucds_ef_vec);
 
+        let universe = *sequence.last().unwrap() + 1;
+        let mut sux_builder = SuxEliasBuilder::new(sequence.len(), universe as usize);
+        sux_builder.extend(sequence.iter().map(|e| *e as usize));
+        let sux_ef_vec = sux_builder.build_with_seq().try_into_unaligned().unwrap();
+        group.bench_with_input(BenchmarkId::new("sux elias fano vector", l), &l, |b, _| {
+            b.iter_custom(|iters| {
+                let mut time = Duration::new(0, 0);
+                let mut i = 0;
+
+                while i < iters {
+                    let iter = sux_ef_vec.iter().take((iters - i) as usize);
+                    let start = Instant::now();
+                    for e in iter {
+                        black_box(e);
+                        i += 1;
+                    }
+                    time += start.elapsed();
+                }
+
+                time
+            })
+        });
+        drop(sux_ef_vec);
+
         let mut cseq_ef_vec = Builder::new(l, *sequence.last().unwrap() + 1);
         cseq_ef_vec.push_all(sequence.iter().copied());
         let cseq_ef_vec = cseq_ef_vec.finish();
 
-        group.bench_with_input(
-            BenchmarkId::new("cseq elias fano vector", l),
-            &l,
-            |b, _| {
-                b.iter_custom(|iters| {
-                    let mut time = Duration::new(0, 0);
-                    let mut i = 0;
+        group.bench_with_input(BenchmarkId::new("cseq elias fano vector", l), &l, |b, _| {
+            b.iter_custom(|iters| {
+                let mut time = Duration::new(0, 0);
+                let mut i = 0;
 
-                    while i < iters {
-                        let iter = cseq_ef_vec.iter().take((iters - i) as usize);
-                        let start = Instant::now();
-                        for e in iter {
-                            black_box(e);
-                            i += 1;
-                        }
-                        time += start.elapsed();
+                while i < iters {
+                    let iter = cseq_ef_vec.iter().take((iters - i) as usize);
+                    let start = Instant::now();
+                    for e in iter {
+                        black_box(e);
+                        i += 1;
                     }
+                    time += start.elapsed();
+                }
 
-                    time
-                })
-            },
-        );
+                time
+            })
+        });
         drop(cseq_ef_vec);
     }
     group.finish();

@@ -34,7 +34,7 @@ pub(crate) enum BitVecState {
     SucDsDA(SucDsDVec),
     Bitm(BitmVec),
     SuxR9(SuxR9Vec),
-    SuxSmall(SuxSmallVec<1, 10, sux::bits::BitVec, Box<[usize]>, Box<[Block32Counters<1, 10>]>>),
+    SuxSmall(SuxSmallVec<64, 1, 10, sux::bits::BitVec, Box<[u64]>, Box<[Block32Counters<1, 10>]>>),
 }
 
 fn create_u64_params(number: usize, len: usize) -> Box<[u64]> {

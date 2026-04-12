@@ -1,4 +1,3 @@
-use std::fs::OpenOptions;
 use crate::benchmark::Benchmark;
 use crate::measure::Measurement;
 use crate::runner;
@@ -10,13 +9,17 @@ use indexed_bitvec::IndexedBits as IndexedVec;
 use rand::distributions::Uniform;
 use rand::Rng;
 use rsdict::RsDict;
+use std::fs::OpenOptions;
 use std::hint::black_box;
 use std::ops::Div;
 use std::path::Path;
 use sucds::bit_vectors::darray::DArray as SucDsDVec;
 use sucds::bit_vectors::rank9sel::Rank9Sel as SucDsR9Vec;
 use sucds::bit_vectors::{BitVector as SucBitVec, Select};
-use sux::prelude::{BitVec as SuxVec, SelectZeroAdapt as SuxR9Select, SelectZero as SuxSelect, AddNumBits, Block32Counters, RankSmall as SuxSmallVec};
+use sux::prelude::{
+    AddNumBits, BitVec as SuxVec, Block32Counters, RankSmall as SuxSmallVec,
+    SelectZero as SuxSelect, SelectZeroAdapt as SuxR9Select,
+};
 use sux::rank_small;
 use sux::traits::BitVecOpsMut;
 use vers_vecs::{BitVec, RsVec};
@@ -32,7 +35,20 @@ pub(crate) enum BitVecState {
     SucDsDA(SucDsDVec),
     Bitm(BitmVec<CombinedSampling, CombinedSampling>),
     SuxR9(SuxR9Select<AddNumBits<SuxVec>>),
-    SuxSmall(SuxR9Select<AddNumBits<SuxSmallVec<1, 10, sux::bits::BitVec, Box<[usize]>, Box<[Block32Counters<1, 10>]>>>>),
+    SuxSmall(
+        SuxR9Select<
+            AddNumBits<
+                SuxSmallVec<
+                    64,
+                    1,
+                    10,
+                    sux::bits::BitVec,
+                    Box<[u64]>,
+                    Box<[Block32Counters<1, 10>]>,
+                >,
+            >,
+        >,
+    ),
 }
 
 fn create_params(number: usize, len: usize) -> Box<[u64]> {
@@ -59,9 +75,7 @@ runner!(
 
         Vers(bitvec.into())
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let Vers(bv) = bv {
             black_box(bv.select0(*idx as usize));
@@ -81,9 +95,7 @@ runner!(
         }
         RsD(rs_dict)
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let RsD(bv) = bv {
             black_box(bv.select0(*idx));
@@ -105,9 +117,7 @@ runner!(
         // as it is intended, but the library is so slow, it doesn't matter in any case.
         Bio(BioRsVec::new(bio_vec, 512 / 32))
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let Bio(bv) = bv {
             black_box(bv.select_0(*idx));
@@ -127,9 +137,7 @@ runner!(
         }
         Fid(fid_vec)
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let Fid(bv) = bv {
             black_box(bv.select0(*idx));
@@ -147,9 +155,7 @@ runner!(
         let vec = rng.sample_iter(sample).take(size / 8).collect::<Vec<u8>>();
         IndexedBV(IndexedVec::build_from_bytes(vec, size as u64).unwrap())
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let IndexedBV(bv) = bv {
             black_box(bv.select_zeros(*idx));
@@ -173,9 +179,7 @@ runner!(
 
         SucDsR9(SucDsR9Vec::new(suc_bv).select0_hints())
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let SucDsR9(bv) = bv {
             black_box(bv.select0(*idx as usize));
@@ -197,11 +201,13 @@ runner!(
                 .expect("Failed to push bits into sucds bitvector");
         }
 
-        SucDsDA(SucDsDVec::from_bits(suc_bv.iter()).enable_rank().enable_select0())
+        SucDsDA(
+            SucDsDVec::from_bits(suc_bv.iter())
+                .enable_rank()
+                .enable_select0(),
+        )
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let SucDsDA(bv) = bv {
             black_box(bv.select0(*idx as usize));
@@ -224,9 +230,7 @@ runner!(
 
         Bitm(bv.into())
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let Bitm(bv) = bv {
             black_box(bv.select0(*idx as usize));
@@ -245,11 +249,9 @@ runner!(
             }
         }
 
-        SuxR9(SuxR9Select::new(bit_vec.into(), 4))
+        SuxR9(SuxR9Select::new(bit_vec.into()))
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let SuxR9(bv) = bv {
             black_box(bv.select_zero(*idx as usize));
@@ -272,11 +274,9 @@ runner!(
 
         let rank_support = rank_small![2; bit_vec];
 
-        SuxSmall(SuxR9Select::new(rank_support.into(), 4))
+        SuxSmall(SuxR9Select::new(rank_support.into()))
     },
-    prepare_params = |number, len| {
-        create_params(number, len)
-    },
+    prepare_params = |number, len| { create_params(number, len) },
     execute = |bv: BitVecState, idx: u64| {
         if let SuxSmall(bv) = bv {
             black_box(bv.select_zero(*idx as usize));

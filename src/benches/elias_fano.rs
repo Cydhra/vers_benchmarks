@@ -10,8 +10,14 @@ use std::fs::OpenOptions;
 use std::hint::black_box;
 use std::path::Path;
 use sucds::mii_sequences::{EliasFano as SDSEliasSeq, EliasFanoBuilder as SDSEliasBuilder};
-use sux::dict::{elias_fano::EfSeqDict as SuxEliasSeq, EliasFanoBuilder as SuxEliasBuilder};
+use sux::bits::BitVec;
+use sux::dict::{EliasFano, EliasFanoBuilder as SuxEliasBuilder};
+use sux::rank_sel::SelectAdaptConst;
 use sux::traits::IndexedSeq;
+use sux::traits::TryIntoUnaligned;
+use sux::traits::Unaligned;
+
+type SuxEliasSeq = Unaligned<EliasFano<usize, SelectAdaptConst<BitVec<Box<[usize]>>>>>;
 use vers_vecs::EliasFanoVec;
 use EfState::*;
 
@@ -83,7 +89,7 @@ runner!(
         let universe = *sequence.last().unwrap() + 1;
         let mut builder = SuxEliasBuilder::new(sequence.len() as usize, universe as usize);
         builder.extend(sequence.into_iter().map(|e| e as usize));
-        SuxEliasFano(builder.build_with_seq_and_dict())
+        SuxEliasFano(builder.build_with_seq().try_into_unaligned().unwrap())
     },
     prepare_params = |number, len| { create_params(number, len) },
     execute = |ef: EfState, idx: usize| {
