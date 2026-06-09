@@ -2361,7 +2361,7 @@ dependencies = [
 
 [[package]]
 name = "vers-vecs"
-version = "1.9.0"
+version = "1.9.1"
 
 [[package]]
 name = "vers_benchmarks"
