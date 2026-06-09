@@ -31,7 +31,7 @@ pub enum EfState {
     SuxEliasFano(SuxEliasSeq),
 }
 
-fn generate_random_sequence(size: usize) -> Vec<u64> {
+pub(crate) fn generate_random_sequence(size: usize) -> Vec<u64> {
     let mut sequence = thread_rng()
         .sample_iter(Uniform::new(0u64, UNIVERSE_SIZE))
         .take(size)
@@ -70,7 +70,7 @@ runner!(
         builder
             .extend(sequence.into_iter().map(|i| i as usize))
             .unwrap();
-        SDSEliasFano(builder.build())
+        SDSEliasFano(builder.build().enable_rank())
     },
     prepare_params = |number, len| { create_params(number, len) },
     execute = |ef: EfState, idx: usize| {

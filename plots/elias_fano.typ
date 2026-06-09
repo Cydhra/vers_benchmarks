@@ -17,3 +17,9 @@
 #line_plot("Elias Fano Random Access", x_values, ef_compare, ylim: 1000)
 #pagebreak()
 #line_plot("Elias Fano Random Access", x_values, lines)
+#pagebreak()
+
+#let input = csv("../measurements/elias_fano_successor.tsv", delimiter: "\t", row-type: dictionary)
+#let (x_values, lines) = read_line_data(input)
+
+#line_plot("Elias Fano Successor", x_values, lines)

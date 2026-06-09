@@ -17,4 +17,5 @@ fn main() {
     rank::benchmark(&directory);
     select::benchmark(&directory);
     elias_fano::benchmark(&directory);
+    elias_successor::benchmark(&directory);
 }
